@@ -95,25 +95,25 @@ jobs:
             # ***** TESTING ******
             cp threagile/output/success.json input.json
 
-
           else
             echo "{}" > input.json
           fi
 
-          # echo "======================= PASS ========================="
-
           # Evaluate the policy against input.json
           opa eval --data policies/vulnerabilities/vulnerabilities.rego --input input.json "data.policies.vulnerabilities.deny" --format=json > opa_result.json
 
-          # Output the OPA evaluation result
+          # Output the OPA evaluation result for debugging
           cat opa_result.json
 
-          # Check if there are any deny messages
-          deny_count=$(jq '.result | length' opa_result.json)
+          # Correctly calculate the number of deny messages
+          deny_count=$(jq '.result[0].expressions[0].value | length' opa_result.json)
+
+          echo "Deny Count: $deny_count"
 
           if [ "$deny_count" -gt 0 ]; then
             echo "OPA Policy Check Failed: Detected $deny_count issues."
-            jq '.result[] | .expressions[] | .value' opa_result.json
+            # Output each deny message
+            jq -r '.result[0].expressions[0].value[]' opa_result.json
             exit 1
           else
             echo "OPA Policy Check Passed: No high-severity vulnerabilities detected."
