@@ -20,7 +20,7 @@ jobs:
       # Run Threagile
       - name: Run Threagile
         id: threagile
-        uses: threagile/run-threagile-action
+        uses: threagile/run-threagile-action@1
         with:
           model-file: 'threagile.yaml'
 
@@ -45,4 +45,3 @@ jobs:
           else
             echo "No changes to commit."
           fi
-          
