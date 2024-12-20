@@ -93,7 +93,8 @@ jobs:
             cp threagile/output/stats.json input.json
 
             # ***** TESTING ******
-            cp threagile/output/success.json input.json
+            # cp threagile/output/success.json input.json
+            echo "{}" > input.json
 
           else
             echo "{}" > input.json
