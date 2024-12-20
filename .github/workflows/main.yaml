@@ -20,7 +20,7 @@ jobs:
       # Run Threagile
       - name: Run Threagile
         id: threagile
-        uses: threagile/run-threagile-action@1
+        uses: threagile/run-threagile-action@v1
         with:
           model-file: 'threagile.yaml'
 
