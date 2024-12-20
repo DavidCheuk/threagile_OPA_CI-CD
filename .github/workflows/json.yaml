@@ -1,0 +1,57 @@
+name: Threat Model Analysis
+
+on:
+  push:
+    paths:
+      - 'threagile.yaml' # Trigger workflow only when the threat model changes
+  workflow_dispatch: # Allows manual triggering of the workflow
+
+jobs:
+  threagile_job:
+    runs-on: ubuntu-latest
+    name: Threat Model Analysis
+    steps:
+      # Checkout the repository
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+        with:
+          persist-credentials: true # Ensures that the GITHUB_TOKEN is available for push
+
+      # Run Threagile
+      - name: Run Threagile
+        id: threagile
+        uses: threagile/run-threagile-action@v1
+        with:
+          model-file: 'threagile.yaml'
+
+      # Verify Generated Files (Optional but Recommended)
+      - name: Verify Generated Files
+        run: |
+          ls -la threagile/output
+          echo "Contents of threagile/output:"
+          cat threagile/output/stats.json
+          cat threagile/output/risks.json
+
+      # Archive resulting files as artifacts
+      - name: Archive Results
+        uses: actions/upload-artifact@v3
+        with:
+          name: threagile-report
+          path: threagile/output
+
+      # Commit & Push Report and DFD Diagram
+      - name: Commit & Push Report and DFD Diagram
+        run: |
+          git config --local user.email "threagile@example.com" # Customize as needed
+          git config --local user.name "Threagile" # Customize as needed
+          git add threagile/output/report.pdf
+          git add threagile/output/data-flow-diagram.png
+          git add threagile/output/stats.json
+          git add threagile/output/risks.json
+          # Commit only if there are changes
+          if ! git diff --cached --quiet; then
+            git commit -m "Update threat model reports and data-flow diagrams by Threagile"
+            git push origin HEAD:${{ github.ref }}
+          else
+            echo "No changes to commit."
+          fi
