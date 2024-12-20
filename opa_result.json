@@ -1,0 +1,20 @@
+{
+  "result": [
+    {
+      "expressions": [
+        {
+          "value": [
+            "Critical vulnerabilities unchecked: 1",
+            "Elevated vulnerabilities unchecked: 20",
+            "High vulnerabilities unchecked: 2"
+          ],
+          "text": "data.policies.vulnerabilities.deny",
+          "location": {
+            "row": 1,
+            "col": 1
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -12,7 +12,7 @@ on:
 
 jobs:
   threagile_analysis:
-    runs-on: [ Linux ]
+    runs-on: [Linux]
     steps:
       # Step 1: Checkout Repository
       - name: Checkout Repository
@@ -60,7 +60,7 @@ jobs:
           fi
 
   opa_policy_check:
-    runs-on: [ Linux ]
+    runs-on: [Linux]
     needs: threagile_analysis # Ensures this job runs after threagile_analysis
     steps:
       # Step 1: Checkout Repository
@@ -94,9 +94,11 @@ jobs:
           else
             echo "{}" > input.json
           fi
+
           echo "======================= PASS ========================="
+
           # Evaluate the policy against input.json
-          opa eval --data policies/vulnerabilities.rego --input input.json "data.threagile.vulnerabilities.deny" --format=json > opa_result.json
+          opa eval --data policies/vulnerabilities/vulnerabilities.rego --input input.json "data.policies.vulnerabilities.deny" --format=json > opa_result.json
 
           # Output the OPA evaluation result
           cat opa_result.json
