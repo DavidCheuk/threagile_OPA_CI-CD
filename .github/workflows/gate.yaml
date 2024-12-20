@@ -1,0 +1,116 @@
+name: CI/CD Pipeline with Threagile and OPA
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'threagile.yaml'
+      - 'policies/**'
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  threagile_analysis:
+    runs-on: ubuntu-latest
+    steps:
+      # Step 1: Checkout Repository
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+        with:
+          persist-credentials: true # Ensures that the GITHUB_TOKEN is available for push
+
+      # Step 2: Run Threagile
+      - name: Run Threagile
+        id: threagile
+        uses: threagile/run-threagile-action@v1
+        with:
+          model-file: 'threagile.yaml'
+
+      # Step 3: Verify Generated Files (Optional but Recommended)
+      - name: Verify Generated Files
+        run: |
+          ls -la threagile/output
+          echo "Contents of threagile/output:"
+          cat threagile/output/stats.json
+          cat threagile/output/risks.json
+
+      # Step 4: Archive resulting files as artifacts
+      - name: Archive Results
+        uses: actions/upload-artifact@v3
+        with:
+          name: threagile-report
+          path: threagile/output
+
+      # Step 5: Commit & Push Report and DFD Diagram
+      - name: Commit & Push Report and DFD Diagram
+        run: |
+          git config --local user.email "threagile@example.com" # Customize as needed
+          git config --local user.name "Threagile" # Customize as needed
+          git add threagile/output/report.pdf
+          git add threagile/output/data-flow-diagram.png
+          git add threagile/output/stats.json
+          git add threagile/output/risks.json
+          # Commit only if there are changes
+          if ! git diff --cached --quiet; then
+            git commit -m "Update threat model reports and data-flow diagrams by Threagile"
+            git push origin HEAD:${{ github.ref }}
+          else
+            echo "No changes to commit."
+          fi
+
+  opa_policy_check:
+    runs-on: ubuntu-latest
+    needs: threagile_analysis # Ensures this job runs after threagile_analysis
+    steps:
+      # Step 1: Checkout Repository
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      # Step 2: Set up OPA using the setup-OPA action
+      - name: Set Up Open Policy Agent
+        uses: open-policy-agent/setup-opa@v2.2.0
+        with:
+          version: '0.70.0' # Specify the desired OPA version
+
+      # Step 3: Verify OPA installation by checking its version
+      - name: Verify OPA Installation
+        run: opa version
+
+      # Step 4: Run OPA Policy Check on stats.json
+      - name: Run OPA Policy Check
+        run: |
+          # Ensure jq is installed for JSON parsing (if not already available)
+          if ! command -v jq &> /dev/null; then
+            echo "jq not found. Installing jq..."
+            sudo apt-get update && sudo apt-get install -y jq
+          fi
+
+          # Check if stats.json exists and prepare input data
+          if [ -f threagile/output/stats.json ]; then
+            echo "Threagile evaluation found: 'threagile/output/stats.json' exists."
+            # Assuming stats.json contains the 'vulnerabilities' key
+            cp threagile/output/stats.json input.json
+          else
+            echo "{}" > input.json
+          fi
+
+          # Evaluate the policy against input.json
+          opa eval --data policies/vulnerabilities.rego --input input.json "data.threagile.vulnerabilities.deny" --format=json > opa_result.json
+
+          # Output the OPA evaluation result
+          cat opa_result.json
+
+          # Check if there are any deny messages
+          deny_count=$(jq '.result | length' opa_result.json)
+
+          if [ "$deny_count" -gt 0 ]; then
+            echo "OPA Policy Check Failed: Detected $deny_count issues."
+            jq '.result[] | .expressions[] | .value' opa_result.json
+            exit 1
+          else
+            echo "OPA Policy Check Passed: No high-severity vulnerabilities detected."
+          fi
+        env:
+          # Ensure PATH includes directories where jq might be installed
+          PATH: /usr/bin:/bin:/usr/local/bin
