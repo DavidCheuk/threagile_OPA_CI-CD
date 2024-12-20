@@ -1,4 +1,4 @@
-name: Threat Model Analysis
+name: Threat Model Analysis with JSON
 
 on:
   push:
