@@ -94,7 +94,7 @@ jobs:
           else
             echo "{}" > input.json
           fi
-
+          echo "======================= PASS ========================="
           # Evaluate the policy against input.json
           opa eval --data policies/vulnerabilities.rego --input input.json "data.threagile.vulnerabilities.deny" --format=json > opa_result.json
 
