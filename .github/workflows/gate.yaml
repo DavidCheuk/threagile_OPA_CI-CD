@@ -12,7 +12,7 @@ on:
 
 jobs:
   threagile_analysis:
-    runs-on: ubuntu-latest
+    runs-on: [ Linux ]
     steps:
       # Step 1: Checkout Repository
       - name: Checkout Repository
@@ -60,7 +60,7 @@ jobs:
           fi
 
   opa_policy_check:
-    runs-on: ubuntu-latest
+    runs-on: [ Linux ]
     needs: threagile_analysis # Ensures this job runs after threagile_analysis
     steps:
       # Step 1: Checkout Repository
