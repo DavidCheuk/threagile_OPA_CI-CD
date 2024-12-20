@@ -89,7 +89,7 @@ jobs:
           # Check if stats.json exists and prepare input data
           if [ -f threagile/output/stats.json ]; then
             echo "Threagile evaluation found: 'threagile/output/stats.json' exists."
-            # Assuming stats.json contains the 'vulnerabilities' key
+            # Copy stats.json to input.json for OPA evaluation
             cp threagile/output/stats.json input.json
           else
             echo "{}" > input.json
@@ -111,6 +111,6 @@ jobs:
           else
             echo "OPA Policy Check Passed: No high-severity vulnerabilities detected."
           fi
+        shell: /usr/bin/bash -e {0}
         env:
-          # Ensure PATH includes directories where jq might be installed
           PATH: /usr/bin:/bin:/usr/local/bin
