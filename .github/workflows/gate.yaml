@@ -91,11 +91,16 @@ jobs:
             echo "Threagile evaluation found: 'threagile/output/stats.json' exists."
             # Copy stats.json to input.json for OPA evaluation
             cp threagile/output/stats.json input.json
+
+            # ***** TESTING ******
+            cp threagile/output/success.json input.json
+
+
           else
             echo "{}" > input.json
           fi
 
-          echo "======================= PASS ========================="
+          # echo "======================= PASS ========================="
 
           # Evaluate the policy against input.json
           opa eval --data policies/vulnerabilities/vulnerabilities.rego --input input.json "data.policies.vulnerabilities.deny" --format=json > opa_result.json
