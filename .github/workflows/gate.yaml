@@ -94,7 +94,7 @@ jobs:
 
             # ***** TESTING ******
             # cp threagile/output/success.json input.json
-            echo "{}" > input.json
+            # echo "{}" > input.json
 
           else
             echo "{}" > input.json
