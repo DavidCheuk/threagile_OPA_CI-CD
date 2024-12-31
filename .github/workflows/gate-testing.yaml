@@ -90,7 +90,8 @@ jobs:
           fi
           
           echo "============= TEST1: Threagile artifacts present; No High, Critical Vuls, NO BLOCKING ============"
-
+        
+          # Ask OPA to evaluate a Threagile Artifacts with no high or critical vulnerabilities
           cp threagile/output/success.json input.json
 
           # Evaluate the policy against input.json
@@ -121,9 +122,8 @@ jobs:
             # Copy stats.json to input.json for OPA evaluation
             cp threagile/output/stats.json input.json
 
-            # ***** TESTING ******
-            # cp threagile/output/success.json input.json
-            echo "{}" > input.json
+            # Make input.json empty to simulate the absense of Threagile artifacts
+            echo "{}" > input.json 
 
           else
             echo "{}" > input.json
@@ -156,10 +156,6 @@ jobs:
             echo "Threagile evaluation found: 'threagile/output/stats.json' exists."
             # Copy stats.json to input.json for OPA evaluation
             cp threagile/output/stats.json input.json
-
-            # ***** TESTING ******
-            # cp threagile/output/success.json input.json
-            #echo "{}" > input.json
 
           else
             echo "{}" > input.json
