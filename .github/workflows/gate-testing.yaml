@@ -117,10 +117,10 @@ jobs:
           echo " "
           echo "============= TEST2: Threagile not done: BLOCKING ============"
   
-          if [ -f threagile/output/stats.json ]; then
-            echo "Threagile evaluation found: 'threagile/output/stats.json' exists."
-            # Copy stats.json to input.json for OPA evaluation
-            cp threagile/output/stats.json input.json
+          #if [ -f threagile/output/stats.json ]; then
+          #  echo "Threagile evaluation found: 'threagile/output/stats.json' exists."
+          #  # Copy stats.json to input.json for OPA evaluation
+          #  cp threagile/output/stats.json input.json
 
             # Make input.json empty to simulate the absense of Threagile artifacts
             echo "{}" > input.json 
