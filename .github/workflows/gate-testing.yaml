@@ -89,7 +89,7 @@ jobs:
             sudo apt-get update && sudo apt-get install -y jq
           fi
           
-          echo "============= TEST1: SUCCESS, NO BLOCKING ============"
+          echo "============= TEST1: Threagile artifacts present; No High, Critical Vuls, NO BLOCKING ============"
 
           cp threagile/output/success.json input.json
 
@@ -143,7 +143,7 @@ jobs:
             echo "OPA Policy Check Failed: Detected $deny_count issues."
             # Output each deny message
             jq -r '.result[0].expressions[0].value[]' opa_result.json
-            #exit 1
+            #exit 1  Commented out to let TEST3 running
           else
             echo "OPA Policy Check Passed: No high-severity vulnerabilities detected."
           fi
