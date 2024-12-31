@@ -123,6 +123,7 @@ jobs:
           #  cp threagile/output/stats.json input.json
 
             # Make input.json empty to simulate the absense of Threagile artifacts
+            touch input.json
             echo "{}" > input.json 
 
           else
