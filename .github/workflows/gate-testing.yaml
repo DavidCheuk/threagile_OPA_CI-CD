@@ -113,6 +113,7 @@ jobs:
             echo "OPA Policy Check Passed: No high-severity vulnerabilities detected."
           fi
         
+          echo " "
           echo "============= TEST2: Threagile not done: BLOCKING ============"
   
           if [ -f threagile/output/stats.json ]; then
@@ -179,11 +180,11 @@ jobs:
             echo "OPA Policy Check Failed: Detected $deny_count issues."
             # Output each deny message
             jq -r '.result[0].expressions[0].value[]' opa_result.json
-            exit 1  #actions will show fail because of TEST3 BLOCKING
+            exit 1  # actions will show fail because of TEST3 BLOCKING
           else
             echo "OPA Policy Check Passed: No high-severity vulnerabilities detected."
           fi
-
+          echo "Actions failed because of TEST3's decisio is 'BLOCKING'"
         shell: /usr/bin/bash -e {0}
         env:
           PATH: /usr/bin:/bin:/usr/local/bin
