@@ -126,9 +126,9 @@ jobs:
             touch input.json
             echo "{}" > input.json 
 
-          else
-            echo "{}" > input.json
-          fi
+          #else
+          #  echo "{}" > input.json
+          #fi
 
           # Evaluate the policy against input.json
           opa eval --data policies/vulnerabilities/vulnerabilities.rego --input input.json "data.policies.vulnerabilities.deny" --format=json > opa_result.json
