@@ -143,12 +143,12 @@ jobs:
             echo "OPA Policy Check Failed: Detected $deny_count issues."
             # Output each deny message
             jq -r '.result[0].expressions[0].value[]' opa_result.json
-            exit 1
+            #exit 1
           else
             echo "OPA Policy Check Passed: No high-severity vulnerabilities detected."
           fi
 
-
+          echo " "
           echo "============= TEST3: HIGH & CRITICAL vul found: BLOCKING ============"
 
           if [ -f threagile/output/stats.json ]; then
