@@ -1,0 +1,189 @@
+name: Test - CI/CD Pipeline with Threagile and OPA
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'threagile.yaml'
+      - 'policies/**'
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  threagile_analysis:
+    runs-on: [Linux]
+    steps:
+      # Step 1: Checkout Repository
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+        with:
+          persist-credentials: true # Ensures that the GITHUB_TOKEN is available for push
+
+      # Step 2: Run Threagile
+      - name: Run Threagile
+        id: threagile
+        uses: threagile/run-threagile-action@v1
+        with:
+          model-file: 'threagile.yaml'
+
+      # Step 3: Verify Generated Files (Optional but Recommended)
+      - name: Verify Generated Files
+        run: |
+          ls -la threagile/output
+          echo "Contents of threagile/output:"
+          cat threagile/output/stats.json
+          cat threagile/output/risks.json
+
+      # Step 4: Archive resulting files as artifacts
+      - name: Archive Results
+        uses: actions/upload-artifact@v3
+        with:
+          name: threagile-report
+          path: threagile/output
+
+      # Step 5: Commit & Push Report and DFD Diagram
+      - name: Commit & Push Report and DFD Diagram
+        run: |
+          git config --local user.email "threagile@example.com" # Customize as needed
+          git config --local user.name "Threagile" # Customize as needed
+          git add threagile/output/report.pdf
+          git add threagile/output/data-flow-diagram.png
+          git add threagile/output/stats.json
+          git add threagile/output/risks.json
+          # Commit only if there are changes
+          if ! git diff --cached --quiet; then
+            git commit -m "Update threat model reports and data-flow diagrams by Threagile"
+            git push origin HEAD:${{ github.ref }}
+          else
+            echo "No changes to commit."
+          fi
+
+  opa_policy_check:
+    runs-on: [Linux]
+    needs: threagile_analysis # Ensures this job runs after threagile_analysis
+    steps:
+      # Step 1: Checkout Repository
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      # Step 2: Set up OPA using the setup-OPA action
+      - name: Set Up Open Policy Agent
+        uses: open-policy-agent/setup-opa@v2.2.0
+        with:
+          version: '0.70.0' # Specify the desired OPA version
+
+      # Step 3: Verify OPA installation by checking its version
+      - name: Verify OPA Installation
+        run: opa version
+
+      # Step 4: Run OPA Policy Check on stats.json
+      - name: Run OPA Policy Check
+        run: |
+
+
+          # Ensure jq is installed for JSON parsing (if not already available)
+          
+          if ! command -v jq &> /dev/null; then
+            echo "jq not found. Installing jq..."
+            sudo apt-get update && sudo apt-get install -y jq
+          fi
+          
+          echo "============= TEST1: SUCCESS, NO BLOCKING ============"
+
+          cp threagile/output/success.json input.json
+
+          # Evaluate the policy against input.json
+          opa eval --data policies/vulnerabilities/vulnerabilities.rego --input input.json "data.policies.vulnerabilities.deny" --format=json > opa_result.json
+
+          # Output the OPA evaluation result for debugging
+          cat opa_result.json
+
+          # Correctly calculate the number of deny messages
+          deny_count=$(jq '.result[0].expressions[0].value | length' opa_result.json)
+
+          echo "Deny Count: $deny_count"
+
+          if [ "$deny_count" -gt 0 ]; then
+            echo "OPA Policy Check Failed: Detected $deny_count issues."
+            # Output each deny message
+            jq -r '.result[0].expressions[0].value[]' opa_result.json
+            exit 1
+          else
+            echo "OPA Policy Check Passed: No high-severity vulnerabilities detected."
+          fi
+        
+          echo "============= TEST2: Threagile not done: BLOCKING ============"
+  
+          if [ -f threagile/output/stats.json ]; then
+            echo "Threagile evaluation found: 'threagile/output/stats.json' exists."
+            # Copy stats.json to input.json for OPA evaluation
+            cp threagile/output/stats.json input.json
+
+            # ***** TESTING ******
+            # cp threagile/output/success.json input.json
+            echo "{}" > input.json
+
+          else
+            echo "{}" > input.json
+          fi
+
+          # Evaluate the policy against input.json
+          opa eval --data policies/vulnerabilities/vulnerabilities.rego --input input.json "data.policies.vulnerabilities.deny" --format=json > opa_result.json
+
+          # Output the OPA evaluation result for debugging
+          cat opa_result.json
+
+          # Correctly calculate the number of deny messages
+          deny_count=$(jq '.result[0].expressions[0].value | length' opa_result.json)
+
+          echo "Deny Count: $deny_count"
+
+          if [ "$deny_count" -gt 0 ]; then
+            echo "OPA Policy Check Failed: Detected $deny_count issues."
+            # Output each deny message
+            jq -r '.result[0].expressions[0].value[]' opa_result.json
+            exit 1
+          else
+            echo "OPA Policy Check Passed: No high-severity vulnerabilities detected."
+          fi
+
+
+          echo "============= TEST3: HIGH & CRITICAL vul found: BLOCKING ============"
+
+          if [ -f threagile/output/stats.json ]; then
+            echo "Threagile evaluation found: 'threagile/output/stats.json' exists."
+            # Copy stats.json to input.json for OPA evaluation
+            cp threagile/output/stats.json input.json
+
+            # ***** TESTING ******
+            # cp threagile/output/success.json input.json
+            #echo "{}" > input.json
+
+          else
+            echo "{}" > input.json
+          fi
+
+          # Evaluate the policy against input.json
+          opa eval --data policies/vulnerabilities/vulnerabilities.rego --input input.json "data.policies.vulnerabilities.deny" --format=json > opa_result.json
+
+          # Output the OPA evaluation result for debugging
+          cat opa_result.json
+
+          # Correctly calculate the number of deny messages
+          deny_count=$(jq '.result[0].expressions[0].value | length' opa_result.json)
+
+          echo "Deny Count: $deny_count"
+
+          if [ "$deny_count" -gt 0 ]; then
+            echo "OPA Policy Check Failed: Detected $deny_count issues."
+            # Output each deny message
+            jq -r '.result[0].expressions[0].value[]' opa_result.json
+            exit 1
+          else
+            echo "OPA Policy Check Passed: No high-severity vulnerabilities detected."
+          fi
+
+        shell: /usr/bin/bash -e {0}
+        env:
+          PATH: /usr/bin:/bin:/usr/local/bin
