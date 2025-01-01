@@ -83,6 +83,8 @@ jobs:
             local deny_count=$(jq '.result[0].expressions[0].value | length' opa_result.json)
             echo "Deny Count: $deny_count"
 
+            cat opa_result.json
+
             if [ "$deny_count" -gt 0 ]; then
               echo "OPA Policy Check Failed: Detected $deny_count issues."
               jq -r '.result[0].expressions[0].value[]' opa_result.json
@@ -91,8 +93,6 @@ jobs:
               echo "OPA Policy Check Passed: No high-severity vulnerabilities detected."
               return 0
             fi
-
-            cat opa_result.json
 
           }
 
