@@ -1,4 +1,4 @@
-name: CI/CD Pipeline with Threagile and OPA
+name: CI/CD Pipeline with Threagile and OPA Scoring
 
 on:
   push:
