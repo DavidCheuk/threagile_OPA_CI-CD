@@ -3,7 +3,9 @@
     {
       "expressions": [
         {
-          "value": {},
+          "value": {
+            "OPA Policy Check Failed: Vulnerability score 0 is below required threshold of 80. Total deductions: 100": true
+          },
           "text": "data.policies.vulnerabilities.deny",
           "location": {
             "row": 1,

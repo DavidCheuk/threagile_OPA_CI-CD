@@ -81,12 +81,14 @@ jobs:
       - name: Run OPA Policy Check
         run: |
           # Ensure jq is installed for JSON parsing (if not already available)
+          
           if ! command -v jq &> /dev/null; then
             echo "jq not found. Installing jq..."
             sudo apt-get update && sudo apt-get install -y jq
           fi
 
           # Check if stats.json exists and prepare input data
+          
           if [ -f threagile/output/stats.json ]; then
             echo "Threagile evaluation found: 'threagile/output/stats.json' exists."
             # Copy stats.json to input.json for OPA evaluation

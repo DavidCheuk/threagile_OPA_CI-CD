@@ -94,7 +94,8 @@ jobs:
 
             # ***** TESTING ******
             # Uncomment the following line to test with success.json
-            cp threagile/output/success.json input.json
+            # cp threagile/output/success.json input.json
+            echo "{}" > input.json
           else
             echo "{}" > input.json
           fi

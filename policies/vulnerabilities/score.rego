@@ -22,7 +22,6 @@ default deduction_missing_stats := 0
 
 # Input validation
 valid_input if {
-	input.risks
 	is_object(input.risks)
 	count(severities) == count([s | s in severities; input.risks[s].unchecked != null])
 }
