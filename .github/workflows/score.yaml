@@ -1,4 +1,4 @@
-name: CI/CD Pipeline with Threagile and OPA Scoring
+name: CI/CD Pipeline with Threagile and OPA
 
 on:
   push:
@@ -95,34 +95,36 @@ jobs:
             # ***** TESTING ******
             # Uncomment the following line to test with success.json
             # cp threagile/output/success.json input.json
-
           else
             echo "{}" > input.json
           fi
-          
-          cat input.json
 
           # Evaluate the policy against input.json
-          opa eval --data policies/vulnerabilities/score.rego --input input.json "data.policies.vulnerabilities.deny, data.policies.vulnerabilities.score" --format=json > opa_result.json
+          opa eval --data policies/vulnerabilities/score.rego --input input.json "data.policies.vulnerabilities.deny" --format=json > opa_deny_result.json
+          opa eval --data policies/vulnerabilities/score.rego --input input.json "data.policies.vulnerabilities.score" --format=json > opa_score_result.json
+
 
           # Output the OPA evaluation result for debugging
-          cat opa_result.json
+          cat opa_deny_result.json
+          cat opa_score_result.json
 
-          # Extract the total score
-          score=$(jq '.result[] | select(.expressions[].text == "data.policies.vulnerabilities.score") | .expressions[].value' opa_result.json)
 
-          echo "Total Vulnerability Score: $score"
+          # Correctly calculate the number of deny messages
+          deny_count=$(jq '.result[] | select(.expressions[].text == "data.policies.vulnerabilities.deny") | .expressions[].value | length' opa_deny_result.json)
 
-          # Define threshold
-          threshold=80
+          echo "Deny Count: $deny_count"
 
-          if (( $(echo "$score < $threshold" | bc -l) )); then
-            echo "OPA Policy Check Failed: Total vulnerability score $score is below threshold of $threshold."
-            # Extract deny messages
-            jq -r '.result[] | select(.expressions[].text == "data.policies.vulnerabilities.deny") | .expressions[].value[]' opa_result.json
+          if [ "$deny_count" -gt 0 ]; then
+            echo "OPA Policy Check Failed: Detected $deny_count issues."
+            # Output each deny message
+            jq -r '.result[] | select(.expressions[].text == "data.policies.vulnerabilities.deny") | .expressions[].value[]' opa_deny_result.json
             exit 1
           else
-            echo "OPA Policy Check Passed: Total vulnerability score $score meets the threshold of $threshold."
+            # Extract the score
+            score=$(jq '.result[] | select(.expressions[].text == "data.policies.vulnerabilities.score") | .expressions[].value' opa_score_result.json)
+            echo "Total Vulnerability Score: $score"
+
+            echo "OPA Policy Check Passed: Total vulnerability score $score meets the threshold."
           fi
         shell: /usr/bin/bash -e {0}
         env:

@@ -3,11 +3,9 @@
     {
       "expressions": [
         {
-          "value": [
-            "Critical vulnerabilities unchecked: 1",
-            "Elevated vulnerabilities unchecked: 20",
-            "High vulnerabilities unchecked: 2"
-          ],
+          "value": {
+            "OPA Policy Check Failed: Vulnerability score 4 is below required threshold of 80. Total deductions: 96": true
+          },
           "text": "data.policies.vulnerabilities.deny",
           "location": {
             "row": 1,
