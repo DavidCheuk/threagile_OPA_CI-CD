@@ -99,6 +99,8 @@ jobs:
           else
             echo "{}" > input.json
           fi
+          
+          cat input.json
 
           # Evaluate the policy against input.json
           opa eval --data policies/vulnerabilities/score.rego --input input.json "data.policies.vulnerabilities.deny, data.policies.vulnerabilities.score" --format=json > opa_result.json
