@@ -91,19 +91,22 @@ jobs:
               echo "OPA Policy Check Passed: No high-severity vulnerabilities detected."
               return 0
             fi
+
+            cat opa_result.json
+
           }
 
           # Test 1: Valid Threagile output
-          echo "Running Test 1: Valid Threagile artifacts..."
+          echo "============ Running Test 1: Valid Threagile artifacts... ============"
           cp threagile/output/success.json input.json
           check_opa input.json # || exit 1 ----- Commented out to let remaining test run
 
           # Test 2: Missing Threagile output
-          echo "Running Test 2: Missing Threagile artifacts..."
+          echo "============ Running Test 2: Missing Threagile artifacts... ============"
           echo "{}" > input.json
           check_opa input.json # || exit 1 ----- Commented out to let remaining test run
 
           # Test 3: High/Critical vulnerabilities
-          echo "Running Test 3: High/Critical vulnerabilities present..."
+          echo "============ Running Test 3: High/Critical vulnerabilities present... ============"
           cp threagile/output/stats.json input.json
           check_opa input.json || exit 1
