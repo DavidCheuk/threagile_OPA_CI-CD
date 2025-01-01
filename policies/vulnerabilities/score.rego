@@ -7,7 +7,7 @@ weights := {
 	"critical": 11,
 	"elevated": 7,
 	"high": 5,
-	"medium": 1,
+	"medium": 0.5,
 	"low": 0,
 }
 
