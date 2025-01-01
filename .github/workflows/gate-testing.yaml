@@ -1,4 +1,4 @@
-name: TESTING - CI/CD Pipeline with Threagile and OPA
+name: TEST - CI/CD Pipeline with Threagile and OPA
 
 on:
   push:
