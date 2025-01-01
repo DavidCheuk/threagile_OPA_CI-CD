@@ -1,4 +1,4 @@
-name: TESTING - CI/CD Pipeline with Threagile and OPA Scoring
+name: TEST Score - CI/CD Pipeline with Threagile and OPA Scoring
 
 on:
   push:
@@ -99,7 +99,7 @@ jobs:
             local test_name=$2
             local expected_fail=$3
 
-            echo "============= ${test_name} ============"
+            #echo "============= ${test_name} ============"
 
             # Evaluate the deny policy
             opa eval --data "$POLICY_PATH" --input "$input_file" "data.policies.vulnerabilities.deny" --format=json > opa_deny_result.json
