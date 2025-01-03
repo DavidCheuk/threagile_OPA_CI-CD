@@ -90,16 +90,11 @@ jobs:
             echo "Threagile evaluation found: 'threagile/output/risks.json' exists."
             # Copy risks.json to input.json for OPA evaluation
             cp threagile/output/risks.json input.json
-
-            # ***** TESTING ******
-            # Uncomment the following line to test with success.json
-            # cp threagile/output/risks-success.json input.json
-            echo "{}" > input.json
           else
-            echo "{}" > input.json
+            echo "Threagile evaluation not found: Creating empty input.json"
+            echo '{"risks": []}' > input.json
           fi
 
-         
           # Evaluate the 'valid_input' rule
           opa eval --data policies/vulnerabilities/risk.rego --input input.json "data.policies.vulnerabilities.valid_input" --format=json > valid_input.json
 
@@ -108,14 +103,15 @@ jobs:
           cat valid_input.json
 
           # Check if input is valid
-          valid=$(jq '.result[].expressions[].value' valid_input.json)
+          valid=$(jq -r '.result[0].expressions[0].value // "false"' valid_input.json)
           if [ "$valid" != "true" ]; then
+            echo "Input is not valid. Checking for missing risks..."
             # Evaluate the 'deny_missing_risks' policy
             opa eval --data policies/vulnerabilities/risk.rego --input input.json "data.policies.vulnerabilities.deny_missing_risks" --format=json > deny_missing_risks.json
 
             # Extract deny_missing_risks messages
-            deny_missing_risks_msgs=$(jq -r '.result[].expressions[].value | if type == "array" then .[] else empty end' deny_missing_risks.json)
-            deny_missing_risks_count=$(echo "$deny_missing_risks_msgs" | grep -c .)
+            deny_missing_risks_msgs=$(jq -r '.result[0].expressions[0].value | if type == "array" then .[] elif type == "string" then . else empty end' deny_missing_risks.json)
+            deny_missing_risks_count=$(echo "$deny_missing_risks_msgs" | grep -c '^' || echo "0")
 
             echo "Deny Missing Risks Count: $deny_missing_risks_count"
 
@@ -126,7 +122,9 @@ jobs:
               exit 1
             fi
           else
-            # Input is valid, proceed to evaluate 'deny_low_score' and 'score_output'
+            echo "Input is valid. Proceeding to evaluate 'deny_low_score' and 'score_output'..."
+          fi
+
 
             # Evaluate the 'deny_low_score' policy
             opa eval --data policies/vulnerabilities/risk.rego --input input.json "data.policies.vulnerabilities.deny_low_score" --format=json > deny_low_score.json
