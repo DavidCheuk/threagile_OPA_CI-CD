@@ -138,11 +138,18 @@ jobs:
             cat deny_low_score.json
             echo "score_output.json:"
             cat score_output.json
+            
+            echo "=============  pass 1"
 
             # Extract deny_low_score messages
             #deny_low_score_msgs=$(jq -r '.result[].expressions[].value | if type == "array" then .[] else empty end' deny_low_score.json)
             deny_low_score_msgs=$(jq -r '.result[].expressions[].value | if type == "object" and length > 0 then . else empty end' deny_low_score.json)
+            
+            echo "============== pass 2"
+            
             deny_low_score_count=$(echo "$deny_low_score_msgs" | grep -c .)
+            
+            echo "============== pass 3"
 
             echo $deny_low_score_msgs
             echo $deny_low_score_count
