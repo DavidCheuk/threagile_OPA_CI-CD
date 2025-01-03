@@ -143,6 +143,9 @@ jobs:
             cat deny_low_score.json
             echo "score_output.json:"
             cat score_output.json
+            echo " "
+            echo "------------------------------------------------------------------------------------------------"
+
             
             # Extract deny_low_score messages and show debug output
             deny_low_score_msgs=$(jq -r '.result[].expressions[].value | if type == "object" and length > 0 then . else empty end' deny_low_score.json)
@@ -169,9 +172,7 @@ jobs:
             #  echo "No deny low score messages found or count is zero."
             fi
 
-            echo " "
-            echo "------------------------------------------------------------------------------------------------"
-
+           
             echo "Deny Low Score Count: $deny_low_score_count"
 
             if [ "$deny_low_score_count" -gt 0 ]; then
