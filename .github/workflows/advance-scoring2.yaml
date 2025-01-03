@@ -128,7 +128,7 @@ jobs:
             fi
           else
             echo "Input is valid. Proceeding to evaluate 'deny_low_score' and 'score_output'..."
-          
+          fi
 
 
             # Evaluate the 'deny_low_score' policy
@@ -190,7 +190,7 @@ jobs:
               echo "Total Vulnerability Score: $score"
 
               echo "OPA Policy Check Passed: Total vulnerability score $score meets the threshold."
-          fi
+            fi
         
         shell: /usr/bin/bash -e {0}
         env:
