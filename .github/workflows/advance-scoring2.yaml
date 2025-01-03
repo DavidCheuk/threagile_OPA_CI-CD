@@ -190,7 +190,7 @@ jobs:
               echo "Total Vulnerability Score: $score"
 
               echo "OPA Policy Check Passed: Total vulnerability score $score meets the threshold."
-            fi
+          fi
         
         shell: /usr/bin/bash -e {0}
         env:
