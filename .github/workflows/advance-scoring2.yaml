@@ -191,7 +191,7 @@ jobs:
 
               echo "OPA Policy Check Passed: Total vulnerability score $score meets the threshold."
             fi
-         fi
+        
         shell: /usr/bin/bash -e {0}
         env:
           PATH: /usr/bin:/bin:/usr/local/bin
