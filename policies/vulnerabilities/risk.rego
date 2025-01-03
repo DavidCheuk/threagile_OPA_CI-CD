@@ -20,11 +20,16 @@ exploitation_impact_weights := {
 
 # Define the scoring weights for Severity
 severity_weights := {
-	"low": 1,
-	"medium": 2,
+	"low": 0,
+	"medium": 1,
 	"high": 3,
 	"elevated": 4,
 	"critical": 5,
+}
+
+valid_input {
+    is_array(input)
+    count(input) > 0
 }
 
 # Define the total marks available
@@ -32,11 +37,11 @@ total_marks := 100
 
 # Define deduction for missing risk.json
 deduction_missing_risk := 20 if { # Arbitrary deduction value; adjust as needed
-	not input.risks_identified
+	not valid_input
 }
 
 deduction_missing_risk := 0 if {
-	input.risks_identified
+	valid_input
 }
 
 deduction_risks := sum([
