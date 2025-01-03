@@ -140,7 +140,9 @@ jobs:
             cat score_output.json
 
             # Extract deny_low_score messages
-            deny_low_score_msgs=$(jq -r '.result[].expressions[].value | if type == "array" then .[] else empty end' deny_low_score.json)
+            #deny_low_score_msgs=$(jq -r '.result[].expressions[].value | if type == "array" then .[] else empty end' deny_low_score.json)
+            deny_low_score_msgs=$(jq -r '.result[].expressions[].value | if type == "object" and length > 0 then . else empty end' deny_low_score.json)
+
             deny_low_score_count=$(echo "$deny_low_score_msgs" | grep -c .)
 
             echo "Deny Low Score Count: $deny_low_score_count"

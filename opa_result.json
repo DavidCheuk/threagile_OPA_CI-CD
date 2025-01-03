@@ -3,8 +3,10 @@
     {
       "expressions": [
         {
-          "value": 94.7,
-          "text": "data.policies.vulnerabilities.score_output",
+          "value": {
+            "OPA Policy Check Failed: Total vulnerability score %!d(float64=2.75) is below threshold of 80.": true
+          },
+          "text": "data.policies.vulnerabilities.deny_low_score",
           "location": {
             "row": 1,
             "col": 1
