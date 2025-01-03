@@ -1,0 +1,163 @@
+name: CI/CD with Threagile and Advanced OPA Scoring
+ 
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'threagile.yaml'
+      - 'policies/**'
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  threagile_analysis:
+    runs-on: [Linux]
+    steps:
+      # Step 1: Checkout Repository
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+        with:
+          persist-credentials: true # Ensures that the GITHUB_TOKEN is available for push
+
+      # Step 2: Run Threagile
+      - name: Run Threagile
+        id: threagile
+        uses: threagile/run-threagile-action@v1
+        with:
+          model-file: 'threagile.yaml'
+
+      # Step 3: Verify Generated Files (Optional but Recommended)
+      - name: Verify Generated Files
+        run: |
+          ls -la threagile/output
+          echo "Contents of threagile/output:"
+          cat threagile/output/risk.json || echo "risk.json not found."
+
+      # Step 4: Archive resulting files as artifacts
+      - name: Archive Results
+        uses: actions/upload-artifact@v3
+        with:
+          name: threagile-report
+          path: threagile/output
+
+      # Step 5: Commit & Push Report and DFD Diagram
+      - name: Commit & Push Report and DFD Diagram
+        run: |
+          git config --local user.email "threagile@example.com" # Customize as needed
+          git config --local user.name "Threagile" # Customize as needed
+          git add threagile/output/report.pdf
+          git add threagile/output/data-flow-diagram.png
+          git add threagile/output/stats.json
+          git add threagile/output/risks.json
+          # Commit only if there are changes
+          if ! git diff --cached --quiet; then
+            git commit -m "Update threat model reports and data-flow diagrams by Threagile"
+            git push origin HEAD:${{ github.ref }}
+          else
+            echo "No changes to commit."
+          fi
+
+  opa_policy_check:
+    runs-on: [Linux]
+    needs: threagile_analysis # Ensures this job runs after threagile_analysis
+    steps:
+      # Step 1: Checkout Repository
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      # Step 2: Set up OPA using the setup-OPA action
+      - name: Set Up Open Policy Agent
+        uses: open-policy-agent/setup-opa@v2.2.0
+        with:
+          version: '0.70.0' # Specify the desired OPA version
+
+      # Step 3: Verify OPA installation by checking its version
+      - name: Verify OPA Installation
+        run: opa version
+
+      # Step 4: Run OPA Policy Check on risk.json
+      - name: Run OPA Policy Check
+        run: |
+          # Ensure jq is installed for JSON parsing (if not already available)
+          if ! command -v jq &> /dev/null; then
+            echo "jq not found. Installing jq..."
+            sudo apt-get update && sudo apt-get install -y jq
+          fi
+
+          # Check if risk.json exists and prepare input data
+          if [ -f threagile/output/risks.json ]; then
+            echo "Threagile evaluation found: 'threagile/output/risks.json' exists."
+            # Copy risks.json to input.json for OPA evaluation
+            cp threagile/output/risks.json input.json
+
+            # ***** TESTING ******
+            # Uncomment the following line to test with success.json
+            cp threagile/output/risks-success.json input.json
+          else
+            echo "{}" > input.json
+          fi
+
+         
+          # Evaluate the 'valid_input' rule
+          opa eval --data policies/vulnerabilities/risk.rego --input input.json "data.policies.vulnerabilities.valid_input" --format=json > valid_input.json
+
+          # Output the valid_input.json for debugging
+          echo "valid_input.json:"
+          cat valid_input.json
+
+          # Check if input is valid
+          valid=$(jq '.result[].expressions[].value' valid_input.json)
+          if [ "$valid" != "true" ]; then
+            # Evaluate the 'deny_missing_risks' policy
+            opa eval --data policies/vulnerabilities/risk.rego --input input.json "data.policies.vulnerabilities.deny_missing_risks" --format=json > deny_missing_risks.json
+
+            # Extract deny_missing_risks messages
+            deny_missing_risks_msgs=$(jq -r '.result[].expressions[].value | if type == "array" then .[] else empty end' deny_missing_risks.json)
+            deny_missing_risks_count=$(echo "$deny_missing_risks_msgs" | grep -c .)
+
+            echo "Deny Missing Risks Count: $deny_missing_risks_count"
+
+            if [ "$deny_missing_risks_count" -gt 0 ]; then
+              echo "OPA Policy Check Failed: 'risks.json' is missing or improperly structured."
+              echo "Deny Missing Risks Messages:"
+              echo "$deny_missing_risks_msgs"
+              exit 1
+            fi
+          else
+            # Input is valid, proceed to evaluate 'deny_low_score' and 'score_output'
+
+            # Evaluate the 'deny_low_score' policy
+            opa eval --data policies/vulnerabilities/risk.rego --input input.json "data.policies.vulnerabilities.deny_low_score" --format=json > deny_low_score.json
+
+            # Evaluate the 'score_output' policy
+            opa eval --data policies/vulnerabilities/risk.rego --input input.json "data.policies.vulnerabilities.score_output" --format=json > score_output.json
+
+            # Output the OPA evaluation results for debugging
+            echo "deny_low_score.json:"
+            cat deny_low_score.json
+            echo "score_output.json:"
+            cat score_output.json
+
+            # Extract deny_low_score messages
+            deny_low_score_msgs=$(jq -r '.result[].expressions[].value | if type == "array" then .[] else empty end' deny_low_score.json)
+            deny_low_score_count=$(echo "$deny_low_score_msgs" | grep -c .)
+
+            echo "Deny Low Score Count: $deny_low_score_count"
+
+            if [ "$deny_low_score_count" -gt 0 ]; then
+              echo "OPA Policy Check Failed: Total vulnerability score is below the threshold."
+              echo "Deny Low Score Messages:"
+              echo "$deny_low_score_msgs"
+              exit 1
+            else
+              # Extract the score
+              score=$(jq '.result[].expressions[].value' score_output.json)
+              echo "Total Vulnerability Score: $score"
+
+              echo "OPA Policy Check Passed: Total vulnerability score $score meets the threshold."
+            fi
+          fi
+        shell: /usr/bin/bash -e {0}
+        env:
+          PATH: /usr/bin:/bin:/usr/local/bin
