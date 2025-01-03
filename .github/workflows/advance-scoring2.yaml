@@ -92,9 +92,9 @@ jobs:
             cp threagile/output/risks.json input.json
             
             #============= testing succes and empty cases =============
-            cp threagile/output/risks.json input.json
+            cp threagile/output/risks-success.json input.json
             #echo '{"risks": []}' > input.json
-            
+
           else
             echo "Threagile evaluation not found: Creating empty input.json"
             echo '{"risks": []}' > input.json
