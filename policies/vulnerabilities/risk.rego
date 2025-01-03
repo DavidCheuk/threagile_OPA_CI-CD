@@ -4,10 +4,10 @@ import rego.v1
 
 # Define the scoring weights for exploitation_likelihood
 exploitation_likelihood_weights := {
-	"unlikely": 0.5,
-	"likely": 1,
-	"very-likely": 1.5,
-	"frequent": 2,
+	"unlikely": 0.2,
+	"likely": 0.5,
+	"very-likely": 0.8,
+	"frequent": 1,
 }
 
 # Define the scoring weights for exploitation_impact

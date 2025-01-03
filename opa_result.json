@@ -3,7 +3,7 @@
     {
       "expressions": [
         {
-          "value": 0,
+          "value": 94.7,
           "text": "data.policies.vulnerabilities.score_output",
           "location": {
             "row": 1,
