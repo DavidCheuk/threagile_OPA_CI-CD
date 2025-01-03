@@ -145,16 +145,16 @@ jobs:
             
             # Extract deny_low_score messages and show debug output
             deny_low_score_msgs=$(jq -r '.result[].expressions[].value | if type == "object" and length > 0 then . else empty end' deny_low_score.json)
-            echo "Debug - Raw deny_low_score.json content:"
+            echo "Raw deny_low_score.json content:"
             cat deny_low_score.json
 
             # Extract keys from the JSON object and count them, ensuring a default value of 0
             deny_low_score_count=$(echo "$deny_low_score_msgs" | jq 'if . == null or . == "" then 0 else (keys | length) end')
-            echo "Debug - deny_low_score_count before conversion: $deny_low_score_count"
+            #echo "Debug - deny_low_score_count before conversion: $deny_low_score_count"
             deny_low_score_count=${deny_low_score_count:-0}
 
             # Display the count and debug information
-            echo "Deny Low Score Count: $deny_low_score_count"
+            #echo "Deny Low Score Count: $deny_low_score_count"
             #echo "Debug - deny_low_score_msgs content:"
             #echo "$deny_low_score_msgs" | jq '.' || echo "Failed to parse deny_low_score_msgs as JSON"
 
@@ -164,8 +164,8 @@ jobs:
               echo "Deny Low Score Messages:"
               echo "$deny_low_score_msgs" | jq '.' || echo "$deny_low_score_msgs"
               exit 1
-            else
-              echo "No deny low score messages found or count is zero."
+            #else
+            #  echo "No deny low score messages found or count is zero."
             fi
 
             echo " "
