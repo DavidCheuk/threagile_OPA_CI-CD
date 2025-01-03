@@ -105,33 +105,8 @@ jobs:
           opa eval --data policies/vulnerabilities/risk.rego --input input.json "data.policies.vulnerabilities.valid_input" --format=json > valid_input.json
 
           # Output the valid_input.json for debugging
-          #echo "valid_input.json:"
-          #cat valid_input.json
-
-          # Check if input is valid
-          #valid=$(jq -r '.result[0].expressions[0].value // "false"' valid_input.json)
-          #if [ "$valid" != "true" ]; then
-          #  echo " "
-          #  echo "------------------------------------------------------------------------------------------------"
-          #  echo "Input is not valid. Checking for missing risks..."
-          #  # Evaluate the 'deny_missing_risks' policy
-          #  opa eval --data policies/vulnerabilities/risk.rego --input input.json "data.policies.vulnerabilities.deny_missing_risks" --format=json > deny_missing_risks.json
-
-            # Extract deny_missing_risks messages
-          #  deny_missing_risks_msgs=$(jq -r '.result[0].expressions[0].value | if type == "array" then .[] elif type == "string" then . else empty end' deny_missing_risks.json)
-          #  deny_missing_risks_count=$(echo "$deny_missing_risks_msgs" | grep -c '^' || echo "0")
-
-          #  echo "Deny Missing Risks Count: $deny_missing_risks_count"
-
-          #  if [ "$deny_missing_risks_count" -gt 0 ]; then
-          #    echo "OPA Policy Check Failed: 'risks.json' is missing or improperly structured."
-          #    echo "Deny Missing Risks Messages:"
-          #    echo "$deny_missing_risks_msgs"
-          #    exit 1
-          #  fi
-          #else
-          #  echo "Input is valid. Proceeding to evaluate 'deny_low_score' and 'score_output'..."
-          #fi
+          echo "valid_input.json:"
+          cat valid_input.json
 
 
             # Evaluate the 'deny_low_score' policy
@@ -158,9 +133,9 @@ jobs:
             deny_low_score_count=${deny_low_score_count:-0}
 
             # Display the count and debug information
-            #echo "Deny Low Score Count: $deny_low_score_count"
-            #echo "Debug - deny_low_score_msgs content:"
-            #echo "$deny_low_score_msgs" | jq '.' || echo "Failed to parse deny_low_score_msgs as JSON"
+            echo "Deny Low Score Count: $deny_low_score_count"
+            echo "Debug - deny_low_score_msgs content:"
+            echo "$deny_low_score_msgs" | jq '.' || echo "Failed to parse deny_low_score_msgs as JSON"
 
             # Check if there are any deny low score messages
             if [ "$deny_low_score_count" -gt 0 ]; then
@@ -168,8 +143,8 @@ jobs:
               echo "Deny Low Score Messages:"
               echo "$deny_low_score_msgs" | jq '.' || echo "$deny_low_score_msgs"
               exit 1
-            #else
-            #  echo "No deny low score messages found or count is zero."
+            else
+              echo "No deny low score messages found or count is zero."
             fi
 
            

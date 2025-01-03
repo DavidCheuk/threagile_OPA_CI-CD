@@ -60,7 +60,6 @@ threshold := 80
 
 # Deny the workflow if the score is below the threshold
 deny_low_score[msg] if {
-	valid_input
 	score < threshold
 	msg := sprintf("OPA Policy Check Failed: Total vulnerability score %d is below threshold of %d.", [score_output, threshold])
 }
