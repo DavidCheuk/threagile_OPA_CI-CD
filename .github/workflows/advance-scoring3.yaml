@@ -123,7 +123,6 @@ jobs:
             echo " "
             echo "------------------------------------------------------------------------------------------------"
 
-            
             # Extract deny_low_score messages
             deny_low_score_msgs=$(jq -r '.result[].expressions[].value | if type == "object" and length > 0 then . else empty end' deny_low_score.json)
             
@@ -143,17 +142,41 @@ jobs:
               echo "Deny Low Score Messages:"
               echo "$deny_low_score_msgs" | jq '.' || echo "$deny_low_score_msgs"
               exit 1
-            else
-              echo "No deny low score messages found or count is zero."
+            #else
+            #  echo "No deny low score messages found or count is zero."
             fi
-
-           
+  
             echo "Deny Low Score Count: $deny_low_score_count"
 
             if [ "$deny_low_score_count" -gt 0 ]; then
               echo "OPA Policy Check Failed: Total vulnerability score is below the threshold."
               echo "Deny Low Score Messages:"
               echo "$deny_low_score_msgs"
+
+              # Check if input is valid
+              valid=$(jq -r '.result[0].expressions[0].value // "false"' valid_input.json)
+              if [ "$valid" != "true" ]; then
+                echo "Input is not valid. Checking for missing risks..."
+                # Evaluate the 'deny_missing_risks' policy
+                opa eval --data policies/vulnerabilities/risk.rego --input input.json "data.policies.vulnerabilities.deny_missing_risks" --format=json > deny_missing_risks.json
+
+                # Extract deny_missing_risks messages
+                deny_missing_risks_msgs=$(jq -r '.result[0].expressions[0].value | if type == "array" then .[] elif type == "string" then . else empty end' deny_missing_risks.json)
+                deny_missing_risks_count=$(echo "$deny_missing_risks_msgs" | grep -c '^' || echo "0")
+
+                echo "Deny Missing Risks Count: $deny_missing_risks_count"
+
+                if [ "$deny_missing_risks_count" -gt 0 ]; then
+                  echo "OPA Policy Check Failed: 'risks.json' is missing or improperly structured."
+                  echo "Deny Missing Risks Messages:"
+                  echo "$deny_missing_risks_msgs"
+                  exit 1
+                fi
+              fi
+
+
+
+
               exit 1
             else
               # Extract the score
