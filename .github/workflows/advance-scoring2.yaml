@@ -147,13 +147,26 @@ jobs:
             
             echo "============== pass 2"
             
-            deny_low_score_count=$(echo "$deny_low_score_msgs" | grep -c .)
-            
+            # Extract keys from the JSON object and count them
+            deny_low_score_count=$(echo "$deny_low_score_msgs" | jq 'keys | length')
             echo "============== pass 3"
+            
+            # Display the count
+            echo "Deny Low Score Count: $deny_low_score_count"
 
-            echo $deny_low_score_msgs
-            echo $deny_low_score_count
+            # Check if there are any deny low score messages
+            if [ "$deny_low_score_count" -gt 0 ]; then
+              echo "OPA Policy Check Failed: Total vulnerability score is below the threshold."
+              echo "Deny Low Score Messages:"
+              echo "$deny_low_score_msgs" | jq .
+              exit 1
+            fi
+            
 
+            #echo $deny_low_score_msgs
+            #echo $deny_low_score_count
+            echo " "
+            echo "------------------------------------------------------------------------------------------------"
             echo "Deny Low Score Count: $deny_low_score_count"
 
             if [ "$deny_low_score_count" -gt 0 ]; then
