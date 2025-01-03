@@ -105,12 +105,14 @@ jobs:
           opa eval --data policies/vulnerabilities/risk.rego --input input.json "data.policies.vulnerabilities.valid_input" --format=json > valid_input.json
 
           # Output the valid_input.json for debugging
-          echo "valid_input.json:"
-          cat valid_input.json
+          #echo "valid_input.json:"
+          #cat valid_input.json
 
           # Check if input is valid
           valid=$(jq -r '.result[0].expressions[0].value // "false"' valid_input.json)
           if [ "$valid" != "true" ]; then
+            echo " "
+            echo "------------------------------------------------------------------------------------------------"
             echo "Input is not valid. Checking for missing risks..."
             # Evaluate the 'deny_missing_risks' policy
             opa eval --data policies/vulnerabilities/risk.rego --input input.json "data.policies.vulnerabilities.deny_missing_risks" --format=json > deny_missing_risks.json
