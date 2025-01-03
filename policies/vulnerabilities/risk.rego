@@ -44,10 +44,10 @@ deduction_missing_risk := 0 if {
 	valid_input
 }
 
-deduction_risks := sum([
+deduction_risks := floor(sum([
 ((exploitation_likelihood_weights[input[i].exploitation_likelihood] * exploitation_impact_weights[input[i].exploitation_impact]) * severity_weights[input[i].severity]) |
 	some i
-])
+]))
 
 # Calculate total deductions
 total_deductions := deduction_missing_risk + deduction_risks
