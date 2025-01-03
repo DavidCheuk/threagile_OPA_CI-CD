@@ -149,9 +149,7 @@ jobs:
             
             # Extract deny_low_score messages and show debug output
             deny_low_score_msgs=$(jq -r '.result[].expressions[].value | if type == "object" and length > 0 then . else empty end' deny_low_score.json)
-            echo "Raw deny_low_score.json content:"
-            cat deny_low_score.json
-
+            
             # Extract keys from the JSON object and count them, ensuring a default value of 0
             deny_low_score_count=$(echo "$deny_low_score_msgs" | jq 'if . == null or . == "" then 0 else (keys | length) end')
             #echo "Debug - deny_low_score_count before conversion: $deny_low_score_count"
