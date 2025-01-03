@@ -36,7 +36,7 @@ valid_input if {
 total_marks := 100
 
 # Define deduction for missing risk.json
-deduction_missing_risk := 20 if { # Arbitrary deduction value; adjust as needed
+deduction_missing_risk := 31 if { # Arbitrary deduction value; adjust as needed
 	not valid_input
 }
 
