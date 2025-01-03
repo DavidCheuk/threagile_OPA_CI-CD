@@ -90,6 +90,9 @@ jobs:
             echo "Threagile evaluation found: 'threagile/output/risks.json' exists."
             # Copy risks.json to input.json for OPA evaluation
             cp threagile/output/risks.json input.json
+            
+            #============= test empty =============
+            echo '{"risks": []}' > input.json
           else
             echo "Threagile evaluation not found: Creating empty input.json"
             echo '{"risks": []}' > input.json
