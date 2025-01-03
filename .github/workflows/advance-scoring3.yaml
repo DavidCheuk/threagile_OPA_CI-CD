@@ -1,4 +1,4 @@
-name: CI/CD2 with Threagile and Advanced OPA Scoring
+name: CI/CD3 with Threagile and Advanced OPA Scoring
 
 on:
   push:
