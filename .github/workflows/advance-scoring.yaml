@@ -48,7 +48,8 @@ jobs:
           git config --local user.name "Threagile" # Customize as needed
           git add threagile/output/report.pdf
           git add threagile/output/data-flow-diagram.png
-          git add threagile/output/risk.json
+          git add threagile/output/stats.json
+          git add threagile/output/risks.json
           # Commit only if there are changes
           if ! git diff --cached --quiet; then
             git commit -m "Update threat model reports and data-flow diagrams by Threagile"
