@@ -86,10 +86,10 @@ jobs:
           fi
 
           # Check if risk.json exists and prepare input data
-          if [ -f threagile/output/risk.json ]; then
-            echo "Threagile evaluation found: 'threagile/output/risk.json' exists."
-            # Copy risk.json to input.json for OPA evaluation
-            cp threagile/output/risk.json input.json
+          if [ -f threagile/output/risks.json ]; then
+            echo "Threagile evaluation found: 'threagile/output/risks.json' exists."
+            # Copy risks.json to input.json for OPA evaluation
+            cp threagile/output/risks.json input.json
 
             # ***** TESTING ******
             # Uncomment the following line to test with success.json

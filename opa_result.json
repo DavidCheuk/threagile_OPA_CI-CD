@@ -3,8 +3,8 @@
     {
       "expressions": [
         {
-          "value": {},
-          "text": "data.policies.vulnerabilities.deny_low_score",
+          "value": 0,
+          "text": "data.policies.vulnerabilities.score_output",
           "location": {
             "row": 1,
             "col": 1
