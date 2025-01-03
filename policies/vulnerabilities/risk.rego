@@ -27,7 +27,7 @@ severity_weights := {
 	"critical": 5,
 }
 
-valid_input {
+valid_input if {
     is_array(input)
     count(input) > 0
 }
@@ -62,7 +62,7 @@ threshold := 80
 deny_low_score[msg] if {
 	valid_input
 	score < threshold
-	msg := sprintf("OPA Policy Check Failed: Total vulnerability score %d is below threshold of %d.", [score, threshold])
+	msg := sprintf("OPA Policy Check Failed: Total vulnerability score %d is below threshold of %d.", [score_output, threshold])
 }
 
 # Deny the workflow if risk.json is missing
