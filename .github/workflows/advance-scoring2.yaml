@@ -128,7 +128,7 @@ jobs:
             fi
           else
             echo "Input is valid. Proceeding to evaluate 'deny_low_score' and 'score_output'..."
-          
+          fi
 
 
             # Evaluate the 'deny_low_score' policy
