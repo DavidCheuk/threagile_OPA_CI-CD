@@ -60,14 +60,14 @@ threshold := 80
 
 # Deny the workflow if the score is below the threshold
 deny_low_score[msg] if {
-	input.risks_identified
+	valid_input
 	score < threshold
 	msg := sprintf("OPA Policy Check Failed: Total vulnerability score %d is below threshold of %d.", [score, threshold])
 }
 
 # Deny the workflow if risk.json is missing
 deny_missing_risks[msg] if {
-	not input.risks_identified
+	not valid_input
 	msg := "OPA Policy Check Failed: Threagile evaluation has not been performed. Missing or empty 'risks_identified' data."
 }
 
