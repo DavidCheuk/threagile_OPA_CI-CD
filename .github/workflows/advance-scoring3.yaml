@@ -129,13 +129,13 @@ jobs:
             deny_low_score_msgs=$(jq -r '.result[].expressions[].value | if type == "object" and length > 0 then . else empty end' deny_low_score.json)
             deny_missing_risks_msgs=$(jq -r '.result[].expressions[].value | if type == "object" and length > 0 then . else empty end' deny_missing_risks.json)
             
-            #if [ -n $deny_missing_risks_msg ]; then
-            #          echo "Deny Missing Risks Messages:"
-            #          echo $deny_missing_risks_msg
-            #fi
+            if [ -n $deny_missing_risks_msg ]; then
+                      echo "Deny Missing Risks Messages:"
+                      echo $deny_missing_risks_msg
+            fi
             
-            #echo "deny_missing_risks_msgs: "
-            #echo $deny_missing_risks_msgs
+            echo "deny_missing_risks_msgs: "
+            echo $deny_missing_risks_msgs
 
             # Extract keys from the JSON object and count them, ensuring a default value of 0
             deny_low_score_count=$(echo "$deny_low_score_msgs" | jq 'if . == null or . == "" then 0 else (keys | length) end')
