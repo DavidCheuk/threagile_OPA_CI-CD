@@ -157,16 +157,16 @@ jobs:
             #  echo "No deny low score messages found or count is zero."
             fi
   
-            echo "Deny Low Score Count: $deny_low_score_count"
+            #echo "Deny Low Score Count: $deny_low_score_count"
 
             if [ "$deny_low_score_count" -gt 0 ]; then
               echo "OPA Policy Check Failed: Total vulnerability score is below the threshold."
               echo "Deny Low Score Messages:"
               echo "$deny_low_score_msgs"
-              if [ "$deny_missing_risks_msgs" -gt 0 ]; then
-                  echo "Deny Missing Risks Messages2:"
-                  echo "$deny_missing_risks_msgs"
-              fi
+              #if [ "$deny_missing_risks_msgs" -gt 0 ]; then
+              #    echo "Deny Missing Risks Messages2:"
+              #    echo "$deny_missing_risks_msgs"
+              #fi
 
               exit 1
             else
