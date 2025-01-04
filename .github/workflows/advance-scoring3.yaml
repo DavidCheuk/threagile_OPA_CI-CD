@@ -129,9 +129,9 @@ jobs:
             deny_low_score_msgs=$(jq -r '.result[].expressions[].value | if type == "object" and length > 0 then . else empty end' deny_low_score.json)
             deny_missing_risks_msgs=$(jq -r '.result[].expressions[].value | if type == "object" and length > 0 then . else empty end' deny_missing_risks.json)
             
-            if [ -n $deny_missing_risks_msg ]; then
+            if [ -n $deny_missing_risks_msgs ]; then
                 echo "Deny Missing Risks Messages:"
-                echo $deny_missing_risks_msg
+                echo $deny_missing_risks_msgs
             fi
             
             echo "deny_missing_risks_msgs: "
@@ -163,9 +163,9 @@ jobs:
               echo "OPA Policy Check Failed: Total vulnerability score is below the threshold."
               echo "Deny Low Score Messages:"
               echo "$deny_low_score_msgs"
-                 if [ -n $deny_missing_risks_msg ]; then
+                 if [ -n $deny_missing_risks_msgs ]; then
                       echo "Deny Missing Risks Messages:"
-                      echo $deny_missing_risks_msg
+                      echo $deny_missing_risks_msgs
                  fi
               exit 1
             else
