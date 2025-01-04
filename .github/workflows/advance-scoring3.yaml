@@ -103,8 +103,7 @@ jobs:
 
           # Evaluate the 'valid_input' rule
           opa eval --data policies/vulnerabilities/risk.rego --input input.json "data.policies.vulnerabilities.valid_input" --format=json > valid_input.json
-          valid=$(jq -r '.result[0].expressions[0].value // "false"' valid_input.json)
-          
+
           # Output the valid_input.json for debugging
           #echo "valid_input.json:"
           #cat valid_input.json
@@ -153,31 +152,6 @@ jobs:
               echo "OPA Policy Check Failed: Total vulnerability score is below the threshold."
               echo "Deny Low Score Messages:"
               echo "$deny_low_score_msgs"
-
-              # Check if input is valid
-              
-              if [ "$valid" != "true" ]; then
-                echo "Input is not valid. Checking for missing risks..."
-                # Evaluate the 'deny_missing_risks' policy
-                opa eval --data policies/vulnerabilities/risk.rego --input input.json "data.policies.vulnerabilities.deny_missing_risks" --format=json > deny_missing_risks.json
-
-                # Extract deny_missing_risks messages
-                deny_missing_risks_msgs=$(jq -r '.result[0].expressions[0].value | if type == "array" then .[] elif type == "string" then . else empty end' deny_missing_risks.json)
-                deny_missing_risks_count=$(echo "$deny_missing_risks_msgs" | grep -c '^' || echo "0")
-
-                echo "Deny Missing Risks Count: $deny_missing_risks_count"
-
-                if [ "$deny_missing_risks_count" -gt 0 ]; then
-                  echo "OPA Policy Check Failed: 'risks.json' is missing or improperly structured."
-                  echo "Deny Missing Risks Messages:"
-                  echo "$deny_missing_risks_msgs"
-                  exit 1
-                fi
-              fi
-
-
-
-
               exit 1
             else
               # Extract the score
