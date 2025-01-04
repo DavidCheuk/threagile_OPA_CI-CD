@@ -163,10 +163,11 @@ jobs:
               echo "OPA Policy Check Failed: Total vulnerability score is below the threshold."
               echo "Deny Low Score Messages:"
               echo "$deny_low_score_msgs"
-              if [ -n "$deny_missing_risks_msgs" ]; then
-                echo "Deny Missing Risks Messages:"
-                echo "$deny_missing_risks_msgs"
+              if [ "$(echo "$deny_missing_risks_msgs" | jq 'length > 0')" = "true" ]; then
+                  echo "Deny Missing Risks Messages2:"
+                  echo "$deny_missing_risks_msgs"
               fi
+
               exit 1
             else
               # Extract the score
