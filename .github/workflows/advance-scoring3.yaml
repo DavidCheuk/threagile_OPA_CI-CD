@@ -108,7 +108,9 @@ jobs:
           #echo "valid_input.json:"
           #cat valid_input.json
 
-
+            # Evaluate the 'deny_missing_risks' policy
+            opa eval --data policies/vulnerabilities/risk.rego --input input.json "data.policies.vulnerabilities.deny_missing_risks" --format=json > deny_missing_risks.json
+           
             # Evaluate the 'deny_low_score' policy
             opa eval --data policies/vulnerabilities/risk.rego --input input.json "data.policies.vulnerabilities.deny_low_score" --format=json > deny_low_score.json
 
