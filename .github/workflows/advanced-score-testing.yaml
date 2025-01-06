@@ -1,0 +1,190 @@
+name: TEST Adcanced Score - CI/CD Pipeline with Threagile and Advanced OPA Scoring
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'threagile.yaml'
+      - 'policies/**'
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  threagile_analysis:
+    runs-on: [Linux]
+    steps:
+      # Step 1: Checkout Repository
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+        with:
+          persist-credentials: true # Ensures that the GITHUB_TOKEN is available for push
+
+      # Step 2: Run Threagile
+      - name: Run Threagile
+        id: threagile
+        uses: threagile/run-threagile-action@v1
+        with:
+          model-file: 'threagile.yaml'
+
+      # Step 3: Verify Generated Files (Optional but Recommended)
+      - name: Verify Generated Files
+        run: |
+          ls -la threagile/output
+          echo "Contents of threagile/output:"
+          cat threagile/output/risk.json || echo "risk.json not found."
+
+      # Step 4: Archive resulting files as artifacts
+      - name: Archive Results
+        uses: actions/upload-artifact@v3
+        with:
+          name: threagile-report
+          path: threagile/output
+
+      # Step 5: Commit & Push Report and DFD Diagram
+      - name: Commit & Push Report and DFD Diagram
+        run: |
+          git config --local user.email "threagile@example.com" # Customize as needed
+          git config --local user.name "Threagile" # Customize as needed
+          git add threagile/output/report.pdf
+          git add threagile/output/data-flow-diagram.png
+          git add threagile/output/stats.json
+          git add threagile/output/risks.json
+          # Commit only if there are changes
+          if ! git diff --cached --quiet; then
+            git commit -m "Update threat model reports and data-flow diagrams by Threagile"
+            git push origin HEAD:${{ github.ref }}
+          else
+            echo "No changes to commit."
+          fi
+
+  opa_policy_check:
+    runs-on: [Linux]
+    needs: threagile_analysis # Ensures this job runs after threagile_analysis
+    steps:
+      # Step 1: Checkout Repository
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      # Step 2: Set up OPA using the setup-OPA action
+      - name: Set Up Open Policy Agent
+        uses: open-policy-agent/setup-opa@v2.2.0
+        with:
+          version: '0.70.0' # Specify the desired OPA version
+
+      # Step 3: Verify OPA installation by checking its version
+      - name: Verify OPA Installation
+        run: opa version
+
+      # Step 4: Install jq for JSON parsing
+      - name: Install jq
+        run: |
+          if ! command -v jq &> /dev/null; then
+            echo "jq not found. Installing jq..."
+            sudo apt-get update && sudo apt-get install -y jq
+          fi
+
+      # Step 5: Run OPA Policy Checks with Three Tests
+      - name: Run OPA Policy Checks
+        run: |
+          set -e
+
+          # Define policy and input paths
+          POLICY_PATH="policies/vulnerabilities/risk.rego"
+          SCORE_POLICY_PATH="policies/vulnerabilities/score.rego"
+          OUTPUT_DIR="threagile/output"
+
+          # Function to evaluate OPA policies
+          evaluate_opa() {
+            local input_file=$1
+            local test_name=$2
+            local expected_fail=$3
+
+            echo "============= ${test_name} ============"
+
+            # Evaluate the deny policy
+            opa eval --data "$POLICY_PATH" --input "$input_file" "data.policies.vulnerabilities.deny_missing_risks" --format=json > opa_deny_missing_risks_result.json
+
+            # Evaluate the deny_low_score policy
+            opa eval --data "$POLICY_PATH" --input "$input_file" "data.policies.vulnerabilities.deny_low_score" --format=json > opa_deny_low_score_result.json
+
+            # Evaluate the score policy
+            opa eval --data "$SCORE_POLICY_PATH" --input "$input_file" "data.policies.vulnerabilities.score_output" --format=json > opa_score_result.json
+
+            # Output the OPA evaluation results for debugging
+            echo "Deny Missing Risks Result:"
+            cat opa_deny_missing_risks_result.json
+            echo "Deny Low Score Result:"
+            cat opa_deny_low_score_result.json
+            echo "Score Result:"
+            cat opa_score_result.json
+
+            # Check deny_missing_risks
+            deny_missing_risks=$(jq '.result[0].expressions[0].value' opa_deny_missing_risks_result.json)
+            deny_low_score=$(jq '.result[0].expressions[0].value' opa_deny_low_score_result.json)
+
+            # Handle deny_missing_risks
+            if [ "$deny_missing_risks" != "false" ]; then
+              echo "OPA Policy Check Failed: Missing risks detected."
+              echo "Missing Risks:"
+              echo "$deny_missing_risks" | jq '.'
+              if [ "$expected_fail" = true ]; then
+                echo "Expected failure for ${test_name}."
+              else
+                exit 1
+              fi
+            fi
+
+            # Handle deny_low_score
+            if [ "$deny_low_score" != "false" ]; then
+              echo "OPA Policy Check Failed: Vulnerability score below threshold."
+              echo "Low Score Details:"
+              echo "$deny_low_score" | jq '.'
+              if [ "$expected_fail" = true ]; then
+                echo "Expected failure for ${test_name}."
+              else
+                exit 1
+              fi
+            else
+              # Extract the score
+              score=$(jq '.result[0].expressions[0].value' opa_score_result.json)
+              echo "Total Vulnerability Score: $score"
+
+              if [ "$expected_fail" = true ]; then
+                echo "Expected failure but OPA Policy Check Passed for ${test_name}."
+                exit 1
+              else
+                echo "OPA Policy Check Passed: Total vulnerability score $score meets the threshold."
+              fi
+            fi
+
+            echo " "
+          }
+
+          # TEST1: Threagile artifacts present; No High, Critical Vuls, NO BLOCKING
+          echo "============= TEST1: Threagile artifacts present; No High, Critical Vuls, NO BLOCKING ============"
+          cp "$OUTPUT_DIR/risks-success.json" input_test1.json
+
+          evaluate_opa "input_test1.json" "TEST1" false
+
+          # TEST2: Threagile not done: BLOCKING
+          echo "============= TEST2: Threagile not done: BLOCKING ============"
+          echo '{"risks": []}' > input_test2.json
+
+          evaluate_opa "input_test2.json" "TEST2" true
+
+          # TEST3: HIGH & CRITICAL vul found: BLOCKING
+          echo "============= TEST3: HIGH & CRITICAL vul found: BLOCKING ============"
+          if [ -f "$OUTPUT_DIR/stats.json" ]; then
+            echo "Threagile evaluation found: '$OUTPUT_DIR/stats.json' exists."
+            # Prepare input_test3.json with high & critical vulnerabilities
+            cp "$OUTPUT_DIR/stats.json" input_test3.json
+          else
+            echo '{"risks": []}' > input_test3.json
+          fi
+
+          evaluate_opa "input_test3.json" "TEST3" true
+
+        shell: /usr/bin/bash -e {0}
+        env:
+          PATH: /usr/bin:/bin:/usr/local/bin
