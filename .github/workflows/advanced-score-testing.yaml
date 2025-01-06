@@ -87,10 +87,8 @@ jobs:
       # Step 5: Run OPA Policy Checks with Three Tests
       - name: Run OPA Policy Checks
         run: |
-          set -e
-
           # Define policy and input paths
-          POLICY_PATH="policies/vulnerabilities/risk.rego"
+          POLICY_PATH="policies/vulnerabilities/vulnerabilities.rego"
           SCORE_POLICY_PATH="policies/vulnerabilities/score.rego"
           OUTPUT_DIR="threagile/output"
 
@@ -103,43 +101,26 @@ jobs:
             echo "============= ${test_name} ============"
 
             # Evaluate the deny policy
-            opa eval --data "$POLICY_PATH" --input "$input_file" "data.policies.vulnerabilities.deny_missing_risks" --format=json > opa_deny_missing_risks_result.json
-
-            # Evaluate the deny_low_score policy
-            opa eval --data "$POLICY_PATH" --input "$input_file" "data.policies.vulnerabilities.deny_low_score" --format=json > opa_deny_low_score_result.json
+            opa eval --data "$POLICY_PATH" --input "$input_file" "data.policies.vulnerabilities.deny" --format=json > opa_deny_result.json
 
             # Evaluate the score policy
-            opa eval --data "$SCORE_POLICY_PATH" --input "$input_file" "data.policies.vulnerabilities.score_output" --format=json > opa_score_result.json
+            opa eval --data "$SCORE_POLICY_PATH" --input "$input_file" "data.policies.vulnerabilities.score" --format=json > opa_score_result.json
 
             # Output the OPA evaluation results for debugging
-            echo "Deny Missing Risks Result:"
-            cat opa_deny_missing_risks_result.json
-            echo "Deny Low Score Result:"
-            cat opa_deny_low_score_result.json
+            echo "Deny Result:"
+            cat opa_deny_result.json
             echo "Score Result:"
             cat opa_score_result.json
 
-            # Check deny_missing_risks
-            deny_missing_risks=$(jq '.result[0].expressions[0].value' opa_deny_missing_risks_result.json)
-            deny_low_score=$(jq '.result[0].expressions[0].value' opa_deny_low_score_result.json)
+            # Calculate the number of deny messages
+            deny_count=$(jq '.result[0].expressions[0].value | length' opa_deny_result.json)
+            echo "Deny Count: $deny_count"
 
-            # Handle deny_missing_risks
-            if [ "$deny_missing_risks" != "false" ]; then
-              echo "OPA Policy Check Failed: Missing risks detected."
-              echo "Missing Risks:"
-              echo "$deny_missing_risks" | jq '.'
-              if [ "$expected_fail" = true ]; then
-                echo "Expected failure for ${test_name}."
-              else
-                exit 1
-              fi
-            fi
-
-            # Handle deny_low_score
-            if [ "$deny_low_score" != "false" ]; then
-              echo "OPA Policy Check Failed: Vulnerability score below threshold."
-              echo "Low Score Details:"
-              echo "$deny_low_score" | jq '.'
+            # Handle deny results
+            if [ "$deny_count" -gt 0 ]; then
+              echo "OPA Policy Check Failed: Detected $deny_count issues."
+              # Output each deny message
+              jq -r '.result[0].expressions[0].value[]' opa_deny_result.json
               if [ "$expected_fail" = true ]; then
                 echo "Expected failure for ${test_name}."
               else
@@ -163,13 +144,13 @@ jobs:
 
           # TEST1: Threagile artifacts present; No High, Critical Vuls, NO BLOCKING
           echo "============= TEST1: Threagile artifacts present; No High, Critical Vuls, NO BLOCKING ============"
-          cp "$OUTPUT_DIR/risks-success.json" input_test1.json
+          cp "$OUTPUT_DIR/success.json" input_test1.json
 
           evaluate_opa "input_test1.json" "TEST1" false
 
           # TEST2: Threagile not done: BLOCKING
           echo "============= TEST2: Threagile not done: BLOCKING ============"
-          echo '{"risks": []}' > input_test2.json
+          echo "{}" > input_test2.json
 
           evaluate_opa "input_test2.json" "TEST2" true
 
@@ -177,10 +158,10 @@ jobs:
           echo "============= TEST3: HIGH & CRITICAL vul found: BLOCKING ============"
           if [ -f "$OUTPUT_DIR/stats.json" ]; then
             echo "Threagile evaluation found: '$OUTPUT_DIR/stats.json' exists."
-            # Prepare input_test3.json with high & critical vulnerabilities
+            # Copy stats.json to input_test3.json for OPA evaluation
             cp "$OUTPUT_DIR/stats.json" input_test3.json
           else
-            echo '{"risks": []}' > input_test3.json
+            echo "{}" > input_test3.json
           fi
 
           evaluate_opa "input_test3.json" "TEST3" true
