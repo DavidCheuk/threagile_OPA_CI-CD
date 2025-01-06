@@ -88,7 +88,7 @@ jobs:
       - name: Run OPA Policy Checks
         run: |
           # Define policy and input paths
-          POLICY_PATH="policies/vulnerabilities/vulnerabilities.rego"
+          POLICY_PATH="policies/vulnerabilities/risk.rego"
           SCORE_POLICY_PATH="policies/vulnerabilities/score.rego"
           OUTPUT_DIR="threagile/output"
 
@@ -144,13 +144,13 @@ jobs:
 
           # TEST1: Threagile artifacts present; No High, Critical Vuls, NO BLOCKING
           echo "============= TEST1: Threagile artifacts present; No High, Critical Vuls, NO BLOCKING ============"
-          cp "$OUTPUT_DIR/success.json" input_test1.json
+          cp "$OUTPUT_DIR/risks-success.json" input_test1.json
 
           evaluate_opa "input_test1.json" "TEST1" false
 
-          # TEST2: Threagile not done: BLOCKING
-          echo "============= TEST2: Threagile not done: BLOCKING ============"
-          echo "{}" > input_test2.json
+          # TEST2: Threagile not done: BLOCKING (Handled as low score, not as an explicit error)
+          echo "============= TEST2: Threagile not done: BLOCKING (Low Score) ============"
+          echo '{"risks": []}' > input_test2.json
 
           evaluate_opa "input_test2.json" "TEST2" true
 
@@ -161,7 +161,7 @@ jobs:
             # Copy stats.json to input_test3.json for OPA evaluation
             cp "$OUTPUT_DIR/stats.json" input_test3.json
           else
-            echo "{}" > input_test3.json
+            echo '{"risks": []}' > input_test3.json
           fi
 
           evaluate_opa "input_test3.json" "TEST3" true
