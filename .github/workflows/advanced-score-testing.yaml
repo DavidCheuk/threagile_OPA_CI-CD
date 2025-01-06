@@ -123,8 +123,8 @@ jobs:
               jq -r '.result[0].expressions[0].value[]' opa_deny_result.json
               if [ "$expected_fail" = true ]; then
                 echo "Expected failure for ${test_name}."
-              else
-                #exit 1
+              #else
+              #  exit 1
               fi
             else
               # Extract the score
