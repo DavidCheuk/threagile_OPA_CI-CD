@@ -127,22 +127,12 @@ jobs:
 
             # Extract deny_low_score messages
             deny_low_score_msgs=$(jq -r '.result[].expressions[].value | if type == "object" and length > 0 then . else empty end' deny_low_score.json)
-            temp_msgs=$(jq -r '.result[].expressions[].value | keys[]?' deny_missing_risks.json)
-
-            # Set and export deny_missing_risks_msgs as a plain string
-            deny_missing_risks_msgs="$temp_msgs"
-            export deny_missing_risks_msgs
-            echo "deny_missing_risks_msgs=$deny_missing_risks_msgs" >> $GITHUB_ENV
-                        
-            
-            
-            
-            #temp_msgs=$(jq -r '.result[].expressions[].value | if type == "object" and length > 0 then . else empty end' deny_missing_risks.json)
+            temp_msgs=$(jq -r '.result[].expressions[].value | if type == "object" and length > 0 then . else empty end' deny_missing_risks.json)
             
             #echo "deny_missing_risks_msgs=$(echo $temp_msgs)"
-            #deny_missing_risks_msgs=$(echo "$temp_msgs")
-            #export deny_missing_risks_msgs
-            #echo "deny_missing_risks_msgs=$deny_missing_risks_msgs" >> $GITHUB_ENV
+            deny_missing_risks_msgs=$(echo "$temp_msgs")
+            export deny_missing_risks_msgs
+            echo "deny_missing_risks_msgs=$deny_missing_risks_msgs" >> $GITHUB_ENV
 
             if [ -n "$deny_missing_risks_msgs" ]; then
                 echo "Deny Missing Risks Messages:"
