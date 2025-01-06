@@ -95,7 +95,7 @@ jobs:
               ;;
             fail)
               echo "Using 'risks-fail.json' to test a failing scenario."
-              cp threagile/output/risks-fail.json input.json
+              cp threagile/output/risks.json input.json
               ;;
             empty)
               echo "No Threagile output found or empty scenario - treating as below threshold."
