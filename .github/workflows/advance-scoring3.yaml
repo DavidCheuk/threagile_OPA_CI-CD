@@ -132,10 +132,10 @@ jobs:
             #echo "deny_missing_risks_msgs=$(echo $temp_msgs)"
             deny_missing_risks_msgs=$(echo "$temp_msgs")
             export deny_missing_risks_msgs
-            if [ -n "$deny_missing_risks_msgs" ]; then
-                echo "Deny Missing Risks Messages:"
-                echo "$deny_missing_risks_msgs"
-            fi
+            #if [ -n "$deny_missing_risks_msgs" ]; then
+            #    echo "Deny Missing Risks Messages:"
+            #    echo "$deny_missing_risks_msgs"
+            #fi
             
             #echo "deny_missing_risks_msgs: "
             #echo $deny_missing_risks_msgs
