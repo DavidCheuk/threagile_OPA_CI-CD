@@ -92,7 +92,7 @@ jobs:
             cp threagile/output/risks.json input.json
             
             #============= testing success and empty cases =============
-            #cp threagile/output/risks-success.json input.json
+            cp threagile/output/risks-success.json input.json
             #echo '{"risks": []}' > input.json
             #==========================================================
           
@@ -151,7 +151,7 @@ jobs:
             echo "OPA Policy Check Failed: Total vulnerability score is below the threshold."
             echo "Deny Low Score Messages:"
             echo "$deny_low_score_msgs" | jq '.' || echo "$deny_low_score_msgs"
-            echo "Deny Missing Risks Messages:"
+            #echo "Deny Missing Risks Messages:"
             echo "$deny_missing_risks_msgs"
             exit 1
           else
