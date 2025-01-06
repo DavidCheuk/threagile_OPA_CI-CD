@@ -93,7 +93,7 @@ jobs:
             
             #============= testing success and empty cases =============
             #cp threagile/output/risks-success.json input.json
-            echo '{"risks": []}' > input.json
+            #echo '{"risks": []}' > input.json
             #==========================================================
           
           else
