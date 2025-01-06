@@ -1,4 +1,4 @@
-name: Threat Model Analysis
+name: Threat Model Analysis with JSON artifacts uploaded
 
 on:
   push:
@@ -24,6 +24,14 @@ jobs:
         with:
           model-file: 'threagile.yaml'
 
+      # Verify Generated Files (Optional but Recommended)
+      - name: Verify Generated Files
+        run: |
+          ls -la threagile/output
+          echo "Contents of threagile/output:"
+          cat threagile/output/stats.json
+          cat threagile/output/risks.json
+
       # Archive resulting files as artifacts
       - name: Archive Results
         uses: actions/upload-artifact@v3
@@ -38,9 +46,11 @@ jobs:
           git config --local user.name "Threagile" # Customize as needed
           git add threagile/output/report.pdf
           git add threagile/output/data-flow-diagram.png
+          git add threagile/output/stats.json
+          git add threagile/output/risks.json
           # Commit only if there are changes
           if ! git diff --cached --quiet; then
-            git commit -m "Update threat model report and data-flow diagram by Threagile"
+            git commit -m "Update threat model reports and data-flow diagrams by Threagile"
             git push origin HEAD:${{ github.ref }}
           else
             echo "No changes to commit."

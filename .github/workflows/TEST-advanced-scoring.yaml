@@ -1,4 +1,4 @@
-name: TEST Adcanced Score2 - CI/CD Pipeline with Threagile and Advanced OPA Scoring
+name: TEST - Advanced Scoring
 
 on:
   push:

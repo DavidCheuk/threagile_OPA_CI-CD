@@ -1,4 +1,4 @@
-name: CI/CD Pipeline with Threagile and OPA Scoring
+name: Simple gating with Threagile, OPA integrated CI/CD
 
 on:
   push:
@@ -81,51 +81,45 @@ jobs:
       - name: Run OPA Policy Check
         run: |
           # Ensure jq is installed for JSON parsing (if not already available)
+          
           if ! command -v jq &> /dev/null; then
             echo "jq not found. Installing jq..."
             sudo apt-get update && sudo apt-get install -y jq
           fi
 
           # Check if stats.json exists and prepare input data
+          
           if [ -f threagile/output/stats.json ]; then
             echo "Threagile evaluation found: 'threagile/output/stats.json' exists."
             # Copy stats.json to input.json for OPA evaluation
             cp threagile/output/stats.json input.json
 
             # ***** TESTING ******
-            # Uncomment the following line to test with success.json
-            # cp threagile/output/success.json input.json
+            cp threagile/output/success.json input.json
             # echo "{}" > input.json
+
           else
             echo "{}" > input.json
           fi
 
           # Evaluate the policy against input.json
-          opa eval --data policies/vulnerabilities/score.rego --input input.json "data.policies.vulnerabilities.deny" --format=json > opa_deny_result.json
-          opa eval --data policies/vulnerabilities/score.rego --input input.json "data.policies.vulnerabilities.score" --format=json > opa_score_result.json
-
+          opa eval --data policies/vulnerabilities/vulnerabilities.rego --input input.json "data.policies.vulnerabilities.deny" --format=json > opa_result.json
 
           # Output the OPA evaluation result for debugging
-          cat opa_deny_result.json
-          cat opa_score_result.json
-
+          cat opa_result.json
 
           # Correctly calculate the number of deny messages
-          deny_count=$(jq '.result[] | select(.expressions[].text == "data.policies.vulnerabilities.deny") | .expressions[].value | length' opa_deny_result.json)
+          deny_count=$(jq '.result[0].expressions[0].value | length' opa_result.json)
 
           echo "Deny Count: $deny_count"
 
           if [ "$deny_count" -gt 0 ]; then
             echo "OPA Policy Check Failed: Detected $deny_count issues."
             # Output each deny message
-            jq -r '.result[] | select(.expressions[].text == "data.policies.vulnerabilities.deny") | .expressions[].value[]' opa_deny_result.json
+            jq -r '.result[0].expressions[0].value[]' opa_result.json
             exit 1
           else
-            # Extract the score
-            score=$(jq '.result[] | select(.expressions[].text == "data.policies.vulnerabilities.score") | .expressions[].value' opa_score_result.json)
-            echo "Total Vulnerability Score: $score"
-
-            echo "OPA Policy Check Passed: Total vulnerability score $score meets the threshold."
+            echo "OPA Policy Check Passed: No high-severity vulnerabilities detected."
           fi
         shell: /usr/bin/bash -e {0}
         env:

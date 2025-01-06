@@ -1,5 +1,4 @@
-name: TEST - CI/CD Pipeline with Threagile and OPA
-
+name: TEST - Gating
 on:
   push:
     branches:

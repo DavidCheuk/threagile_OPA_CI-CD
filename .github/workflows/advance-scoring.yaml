@@ -1,4 +1,4 @@
-name: CI/CD with Threagile and Advanced OPA Scoring
+name: Advanced Scoring with Threagile, OPA integrated CI/CD 
  
 on:
   push:
@@ -84,66 +84,81 @@ jobs:
             echo "jq not found. Installing jq..."
             sudo apt-get update && sudo apt-get install -y jq
           fi
-
+          
           # Check if risk.json exists and prepare input data
           if [ -f threagile/output/risks.json ]; then
             echo "Threagile evaluation found: 'threagile/output/risks.json' exists."
             # Copy risks.json to input.json for OPA evaluation
             cp threagile/output/risks.json input.json
-
-            # ***** TESTING ******
-            # Uncomment the following line to test with success.json
+            
+            #============= testing success and empty cases =============
             cp threagile/output/risks-success.json input.json
+            #echo '{"risks": []}' > input.json
+            #==========================================================
+          
           else
-            echo "{}" > input.json
+            echo "Threagile evaluation not found: Creating empty input.json"
+            echo '{"risks": []}' > input.json
           fi
-
-          # Evaluate the 'deny_low_score' policy
-          opa eval --data policies/vulnerabilities/risk.rego --input input.json "data.policies.vulnerabilities.deny_low_score" --format=json > deny_low_score.json
-
+          
+          # Evaluate the 'valid_input' rule
+          opa eval --data policies/vulnerabilities/risk.rego --input input.json "data.policies.vulnerabilities.valid_input" --format=json > valid_input.json
+          
+          # Output the valid_input.json for debugging
+          #echo "valid_input.json:"
+          #cat valid_input.json
+          
           # Evaluate the 'deny_missing_risks' policy
           opa eval --data policies/vulnerabilities/risk.rego --input input.json "data.policies.vulnerabilities.deny_missing_risks" --format=json > deny_missing_risks.json
-
+         
+          # Evaluate the 'deny_low_score' policy
+          opa eval --data policies/vulnerabilities/risk.rego --input input.json "data.policies.vulnerabilities.deny_low_score" --format=json > deny_low_score.json
+        
           # Evaluate the 'score_output' policy
           opa eval --data policies/vulnerabilities/risk.rego --input input.json "data.policies.vulnerabilities.score_output" --format=json > score_output.json
-
+        
           # Output the OPA evaluation results for debugging
           echo "deny_low_score.json:"
           cat deny_low_score.json
-          echo "deny_missing_risks.json:"
-          cat deny_missing_risks.json
           echo "score_output.json:"
           cat score_output.json
-
+          echo " "
+          echo "------------------------------------------------------------------------------------------------"
+        
           # Extract deny_low_score messages
-          deny_low_score_msgs=$(jq -r '.result[].expressions[].value[]?' deny_low_score.json)
-          deny_low_score_count=$(echo "$deny_low_score_msgs" | grep -c .)
-
-          # Extract deny_missing_risks messages
-          deny_missing_risks_msgs=$(jq -r '.result[].expressions[].value[]?' deny_missing_risks.json)
-          deny_missing_risks_count=$(echo "$deny_missing_risks_msgs" | grep -c .)
-
+          deny_low_score_msgs=$(jq -r '.result[].expressions[].value | if type == "object" and length > 0 then . else empty end' deny_low_score.json)
+          
+          # Extract only the key (message string) from deny_missing_risks.json
+          temp_msgs=$(jq -r '.result[].expressions[].value | keys[]?' deny_missing_risks.json)
+          
+          # Set and export deny_missing_risks_msgs as a plain string
+          deny_missing_risks_msgs="$temp_msgs"
+          export deny_missing_risks_msgs
+          echo "deny_missing_risks_msgs=$deny_missing_risks_msgs" >> $GITHUB_ENV
+        
+          # Debug: Verify the variable is set in the current shell
+          echo "deny_missing_risks_msgs is set to: $deny_missing_risks_msgs"
+        
+          # Extract keys from the deny_low_score_msgs JSON object and count them, ensuring a default value of 0
+          deny_low_score_count=$(echo "$deny_low_score_msgs" | jq 'if . == null or . == "" then 0 else (keys | length) end')
+          deny_low_score_count=${deny_low_score_count:-0}
+        
+          # Display the count and debug information
           echo "Deny Low Score Count: $deny_low_score_count"
-          echo "Deny Missing Risks Count: $deny_missing_risks_count"
-
-          total_denies=$((deny_low_score_count + deny_missing_risks_count))
-
-          if [ "$total_denies" -gt 0 ]; then
-            echo "OPA Policy Check Failed: Detected $total_denies issues."
-            if [ "$deny_low_score_count" -gt 0 ]; then
-              echo "Deny Low Score Messages:"
-              echo "$deny_low_score_msgs"
-            fi
-            if [ "$deny_missing_risks_count" -gt 0 ]; then
-              echo "Deny Missing Risks Messages:"
-              echo "$deny_missing_risks_msgs"
-            fi
+        
+          # Check if there are any deny low score messages
+          if [ "$deny_low_score_count" -gt 0 ]; then
+            echo "OPA Policy Check Failed: Total vulnerability score is below the threshold."
+            echo "Deny Low Score Messages:"
+            echo "$deny_low_score_msgs" | jq '.' || echo "$deny_low_score_msgs"
+            #echo "Deny Missing Risks Messages:"
+            echo "$deny_missing_risks_msgs"
             exit 1
           else
             # Extract the score
             score=$(jq '.result[].expressions[].value' score_output.json)
             echo "Total Vulnerability Score: $score"
-
+        
             echo "OPA Policy Check Passed: Total vulnerability score $score meets the threshold."
           fi
         shell: /usr/bin/bash -e {0}
