@@ -29,7 +29,7 @@ on:
 
 jobs:
   threagile_analysis:
-    runs-on: [Linux]
+    runs-on: ubuntu-latest
     steps:
       # Step 1: Checkout Repository
       - name: Checkout Repository
@@ -76,7 +76,7 @@ jobs:
           fi
 
   opa_policy_check:
-    runs-on: [Linux]
+    runs-on: ubuntu-latest
     needs: threagile_analysis
     strategy:
       # Matrix to run three test scenarios
