@@ -1,4 +1,4 @@
-# Threagile CI/CD Pipeline with OPA Integration
+# Threagile CI/CD Pipeline with OPA Integration for gating decision
 
 This repository demonstrates how to integrate Threagile into a CI/CD pipeline to perform threat modeling and leverage Open Policy Agent (OPA) for making gating decisions based on security policies. Additionally, it showcases the potential of using OPA for approval automation in CI/CD workflows.
 
