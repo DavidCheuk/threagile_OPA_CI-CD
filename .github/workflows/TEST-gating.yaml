@@ -76,7 +76,7 @@ jobs:
             local input_file=$1
             echo "Evaluating policy for $input_file"
 
-            opa eval --data policies/vulnerabilities/vulnerabilities.rego \
+            opa eval --data policies/vulnerabilities/gate.rego \
               --input "$input_file" "data.policies.vulnerabilities.deny" --format=json > opa_result.json
 
             local deny_count=$(jq '.result[0].expressions[0].value | length' opa_result.json)

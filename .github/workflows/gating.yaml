@@ -103,7 +103,7 @@ jobs:
           fi
 
           # Evaluate the policy against input.json
-          opa eval --data policies/vulnerabilities/vulnerabilities.rego --input input.json "data.policies.vulnerabilities.deny" --format=json > opa_result.json
+          opa eval --data policies/vulnerabilities/gate.rego --input input.json "data.policies.vulnerabilities.deny" --format=json > opa_result.json
 
           # Output the OPA evaluation result for debugging
           cat opa_result.json
