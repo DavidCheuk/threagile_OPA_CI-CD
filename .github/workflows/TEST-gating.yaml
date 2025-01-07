@@ -52,14 +52,32 @@ jobs:
           name: threagile-report
           path: threagile/output
 
-      - name: Commit & Push Report and DFD Diagram
+      - name: Set up Git user
         run: |
-          git config --local user.email "threagile@example.com"
-          git config --local user.name "Threagile"
-          git add threagile/output/*
+          git config --local user.email "threagile@example.com" # Customize as needed
+          git config --local user.name "Threagile" # Customize as needed
+
+      - name: Add files to git
+        run: |
+          git add threagile/output/report.pdf
+          git add threagile/output/data-flow-diagram.png
+          git add threagile/output/stats.json
+          git add threagile/output/risks.json
+  
+      - name: Commit changes if any
+        run: |
           if ! git diff --cached --quiet; then
             git commit -m "Update threat model reports and data-flow diagrams by Threagile"
-            git push origin HEAD:${{ github.ref }}
+          else
+            echo "No changes to commit."
+          fi
+  
+      - name: Push changes to repository
+        env:
+          GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        run: |
+          if ! git diff --cached --quiet; then
+            git push https://x-access-token:${PERSONAL_ACCESS_TOKEN}@github.com/${{ github.repository }}.git HEAD:refs/heads/main
           else
             echo "No changes to commit."
           fi

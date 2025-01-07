@@ -83,7 +83,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         run: |
           if ! git diff --cached --quiet; then
-            #git push https://x-access-token:${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/DavidCheuk/threagile_OPA_CI-CD.git HEAD:main
             git push https://x-access-token:${PERSONAL_ACCESS_TOKEN}@github.com/${{ github.repository }}.git HEAD:refs/heads/main
           else
             echo "No changes to commit."
