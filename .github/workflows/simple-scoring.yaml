@@ -146,34 +146,17 @@ jobs:
 
           echo "Deny Count: $deny_count"
 
-          #if [ "$deny_count" -gt 0 ]; then
-          #  echo "OPA Policy Check Failed: Detected $deny_count issues."
-          #  # Output each deny message
-          #  jq -r '.result[] | select(.expressions[].text == "data.policies.vulnerabilities.deny") | .expressions[].value[]' opa_deny_result.json
-          #  exit 1
-          #else
-          #  # Extract the score
-          ##
-          # echo "Total Vulnerability Score: $score"
-
-          #  echo "OPA Policy Check Passed: Total vulnerability score $score meets the threshold."
-          #fi
-
           # Handle deny results
           if [ "$deny_count" -gt 0 ]; then
             echo "OPA Policy Check Failed: Detected $deny_count issues."
             # Output each deny message
             jq -r '.result[0].expressions[0].value[]' opa_deny_result.json
-            #exit 1
-          #else
-            # Extract the score
             score=$(jq '.result[0].expressions[0].value' opa_score_result.json)
-            echo "Total Vulnerability Score: $score"
-
-            echo "OPA Policy Check Passed: Total vulnerability score $score meets the threshold."
-            
+            echo "Total Security Score: $score"
+            exit 1
+          else
+            echo "OPA Policy Check Passed: Total security score $score meets the threshold."
           fi
-
 
         shell: /usr/bin/bash -e {0}
         env:
