@@ -1,5 +1,19 @@
 name: Simple gating with Threagile, OPA integrated CI/CD
 
+# Relative to gate.rego
+# Purpose:
+# Implements a simple gating mechanism to evaluate vulnerabilities.
+#
+# Mechanism:
+# Evaluates the number of high and critical vulnerabilities in a system.
+#
+# Deny if:
+# 1. The 'risks' data is missing.
+# 2. Any of the critical, elevated, or high severities have 'unchecked' vulnerabilities.
+#
+# Focus:
+# Straightforward evaluation based solely on the presence and count of critical issues.
+
 on:
   push:
     branches:

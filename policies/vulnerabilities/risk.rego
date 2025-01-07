@@ -1,5 +1,21 @@
 package policies.vulnerabilities
 
+# Purpose:
+# Provides an advanced risk evaluation by incorporating additional dimensions.
+#
+# Mechanism:
+# - Calculates risk not only based on severity levels but also considers 'impact' and 'likelihood' of the risks.
+# - Assigns weights or values to these factors for a more comprehensive risk analysis.
+#
+# Deny if:
+# 1. The 'risks' data is missing or incomplete.
+# 2. Impact or likelihood data is unavailable for any risk being evaluated.
+# 3. The combined risk (severity, impact, likelihood) exceeds an acceptable threshold.
+# 4. Critical risks have a high likelihood and significant impact, regardless of the overall score.
+#
+# Focus:
+# Holistic risk assessment, combining severity, impact, and likelihood to make more informed decisions.
+
 import rego.v1
 
 # Define the scoring weights for exploitation_likelihood

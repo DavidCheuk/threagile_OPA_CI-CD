@@ -1,5 +1,20 @@
 package policies.vulnerabilities
 
+# Purpose:
+# Assigns a risk score based on different levels of risks and evaluates them against a predefined threshold.
+#
+# Mechanism:
+# - Calculates a cumulative risk score by weighing different risk levels.
+# - Compares the total score against a threshold.
+#
+# Deny if:
+# 1. The 'risks' data is missing or incomplete.
+# 2. The cumulative risk score is below the predefined threshold.
+# 3. There are unscored risks present in critical or high-severity categories.
+#
+# Focus:
+# Quantitative assessment of risk levels, emphasizing score computation for decision-making.
+
 import rego.v1
 
 # Define the scoring weights for unchecked vulnerabilities
@@ -15,7 +30,6 @@ weights := {
 severities := ["critical", "elevated", "high", "medium", "low"]
 
 default total_marks := 100
-
 default threshold := 80
 
 default deduction_missing_stats := 0
