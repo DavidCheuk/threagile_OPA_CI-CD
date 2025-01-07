@@ -89,7 +89,7 @@ jobs:
       - name: Run OPA Policy Checks
         run: |
           # Define policy and input paths
-          POLICY_PATH="policies/vulnerabilities/vulnerabilities.rego"
+          POLICY_PATH="policies/vulnerabilities/gate.rego"
           SCORE_POLICY_PATH="policies/vulnerabilities/score.rego"
           OUTPUT_DIR="threagile/output"
 
