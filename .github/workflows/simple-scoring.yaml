@@ -151,6 +151,8 @@ jobs:
             echo "OPA Policy Check Failed: Detected $deny_count issues."
             # Output each deny message
             # echo $(jq -r '.result[0].expressions[0].value[]' opa_deny_result.json)
+            jq -r '.result[].expressions[].value | keys[]' opa_deny_result.json
+
             score=$(jq '.result[0].expressions[0].value' opa_score_result.json)
             echo "Total Security Score: $score"
             exit 1
