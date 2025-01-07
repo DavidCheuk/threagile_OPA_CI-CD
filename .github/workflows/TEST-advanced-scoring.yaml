@@ -74,7 +74,7 @@ jobs:
         run: |
           if ! git diff --cached --quiet; then
             git commit -m "Update threat model reports and data-flow diagrams by Threagile"
-            git push origin HEAD:${{ github.ref }}
+            #git push origin HEAD:${{ github.ref }}
           else
             echo "No changes to commit."
           fi
