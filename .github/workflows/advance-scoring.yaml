@@ -35,7 +35,7 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
         with:
-          persist-credentials: true # Ensures that the GITHUB_TOKEN is available for push
+          persist-credentials: false # Ensures that the GITHUB_TOKEN is available for push
 
       # Step 2: Run Threagile
       - name: Run Threagile
@@ -58,19 +58,32 @@ jobs:
           name: threagile-report
           path: threagile/output
 
-      # Step 5: Commit & Push Report and DFD Diagram
-      - name: Commit & Push Report and DFD Diagram
+      - name: Set up Git user
         run: |
           git config --local user.email "threagile@example.com" # Customize as needed
           git config --local user.name "Threagile" # Customize as needed
+    
+      - name: Add files to git
+        run: |
           git add threagile/output/report.pdf
           git add threagile/output/data-flow-diagram.png
           git add threagile/output/stats.json
           git add threagile/output/risks.json
-          # Commit only if there are changes
+  
+      - name: Commit changes if any
+        run: |
           if ! git diff --cached --quiet; then
             git commit -m "Update threat model reports and data-flow diagrams by Threagile"
-            git push origin HEAD:${{ github.ref }}
+          else
+            echo "No changes to commit."
+          fi
+  
+      - name: Push changes to repository
+        env:
+          GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        run: |
+          if ! git diff --cached --quiet; then
+            git push https://x-access-token:${PERSONAL_ACCESS_TOKEN}@github.com/${{ github.repository }}.git HEAD:refs/heads/main
           else
             echo "No changes to commit."
           fi
